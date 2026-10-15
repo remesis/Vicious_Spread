@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="color-scheme" content="dark" />
     <title>Vicious Spread — Shotgun Comparison</title>
     <style>
@@ -43,7 +46,8 @@
       button,
       a,
       input,
-      select {
+      select,
+      summary {
         -webkit-tap-highlight-color: transparent;
       }
       button,
@@ -58,7 +62,8 @@
       button:focus-visible,
       a:focus-visible,
       input:focus-visible,
-      select:focus-visible {
+      select:focus-visible,
+      summary:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 4px;
       }
@@ -156,12 +161,17 @@
       }
       .rail {
         grid-area: rail;
-        display: flex;
-        flex-direction: column;
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 12px;
         overflow: hidden;
+      }
+      .rail-summary {
+        display: none;
+      }
+      .rail-content {
+        display: flex;
+        flex-direction: column;
       }
       .rail-section {
         padding: 12px;
@@ -747,6 +757,313 @@
           10px ui-monospace,
           monospace;
       }
+
+      @media (max-width: 1100px), (hover: none) and (pointer: coarse) {
+        html,
+        body {
+          height: auto;
+          min-height: 100%;
+          overflow: visible;
+          -webkit-text-size-adjust: 100%;
+          text-size-adjust: 100%;
+        }
+        .viewport {
+          position: static;
+          overflow: visible;
+        }
+        .shell {
+          position: relative;
+          width: 100%;
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: max(16px, env(safe-area-inset-top))
+            max(12px, env(safe-area-inset-right))
+            max(16px, env(safe-area-inset-bottom))
+            max(12px, env(safe-area-inset-left));
+        }
+        .layout,
+        .layout:not([data-view="side"]) {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-areas: "brand" "rail" "toolbar" "weapons";
+          grid-template-rows: none;
+          gap: 12px;
+        }
+        .layout:not([data-view="side"]) {
+          grid-template-areas: "brand" "rail" "toolbar" "plot" "weapons";
+        }
+        header {
+          min-height: 48px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        .rail-summary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          min-height: 52px;
+          padding: 12px 16px;
+          color: var(--text);
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          list-style: none;
+        }
+        .rail-summary::-webkit-details-marker {
+          display: none;
+        }
+        .rail-summary::after {
+          content: "";
+          width: 8px;
+          height: 8px;
+          margin-right: 3px;
+          border-right: 2px solid var(--accent);
+          border-bottom: 2px solid var(--accent);
+          transform: rotate(45deg);
+        }
+        .rail[open] .rail-summary {
+          border-bottom: 1px solid var(--line);
+        }
+        .rail[open] .rail-summary::after {
+          transform: rotate(225deg);
+        }
+        .rail-content {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-areas: "range mods" "sample mods";
+          align-items: start;
+        }
+        .rail-section {
+          padding: 16px;
+        }
+        .rail-section:first-child {
+          grid-area: range;
+        }
+        .rail-section:nth-child(2) {
+          grid-area: mods;
+          border-left: 1px solid var(--line);
+          border-bottom: 0;
+        }
+        .shot-sample {
+          grid-area: sample;
+        }
+        .eyebrow {
+          font-size: 11px;
+        }
+        .control-line label,
+        .switch-copy {
+          font-size: 14px;
+        }
+        .unit-number,
+        .mod-heading,
+        .mote-readout {
+          font-size: 12px;
+        }
+        .unit-number input,
+        .weapon-row input[type="number"],
+        .riven-control .weapon-row input[type="number"] {
+          width: 76px;
+          min-height: 44px;
+          padding: 8px;
+          font-size: 16px;
+        }
+        input[type="range"] {
+          height: 44px;
+        }
+        .end-labels,
+        .riven-control .end-labels {
+          font-size: 11px;
+          margin-top: 0;
+        }
+        .switch-row,
+        .mod-group .switch-row,
+        .weapon-overcharge {
+          min-height: 44px;
+          margin: 6px 0;
+        }
+        .switch-row input,
+        .riven-switch input {
+          width: 36px;
+          height: 22px;
+        }
+        .switch-row input::before,
+        .riven-switch input::before {
+          width: 14px;
+          height: 14px;
+          top: 3px;
+          left: 3px;
+        }
+        .switch-row input:checked::before,
+        .riven-switch input:checked::before {
+          left: 17px;
+        }
+        .switch-copy small,
+        .weapon-overcharge .switch-copy small {
+          font-size: 11px;
+        }
+        button,
+        select,
+        .shot-sample .button {
+          min-height: 44px;
+        }
+        .button,
+        .shot-sample .button {
+          font-size: 14px;
+        }
+        .shot-sample #reset {
+          min-width: 44px;
+        }
+        .plot-toolbar {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          padding: 12px;
+          gap: 12px;
+        }
+        #projection > button {
+          flex: 1;
+        }
+        .plot-toolbar .segmented button {
+          font-size: 12px;
+          padding: 8px;
+        }
+        .plot-meta {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          margin-left: 0;
+          gap: 4px 10px;
+        }
+        .toolbar-actions {
+          grid-column: 1 / -1;
+          flex-wrap: wrap;
+          gap: 4px;
+        }
+        #restore {
+          width: 100%;
+          text-align: right;
+          font-size: 12px;
+        }
+        #viewMode {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          width: 100%;
+        }
+        .rank-switch {
+          display: contents;
+        }
+        #sweepWeapon {
+          grid-column: 1 / -1;
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          border-left: 0;
+          border-top: 1px solid var(--line);
+          font-size: 16px;
+        }
+        .weapons {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          align-items: start;
+          gap: 12px;
+        }
+        .weapon-header {
+          padding: 16px 14px 4px;
+        }
+        .weapon-title {
+          min-height: 44px;
+          font-size: 16px;
+        }
+        .weapon-title input {
+          width: 20px;
+          height: 20px;
+        }
+        .weapon-sub {
+          flex-wrap: wrap;
+          margin: 4px 0 8px;
+          gap: 4px 12px;
+          font-size: 12px;
+        }
+        .weapon-body {
+          padding: 16px 14px;
+        }
+        .statline {
+          gap: 18px 12px;
+          margin-bottom: 16px;
+        }
+        .stat-number {
+          font-size: 28px;
+        }
+        .stat-name {
+          font-size: 11px;
+        }
+        .weapon-overcharge .switch-copy {
+          font-size: 13px;
+        }
+        .riven-heading {
+          font-size: 12px;
+          margin-top: 10px;
+        }
+        .riven-format {
+          width: 132px;
+        }
+        .riven-format button {
+          font-size: 12px;
+        }
+        .riven-control {
+          margin-top: 12px;
+        }
+        .weapon-row {
+          font-size: 13px;
+        }
+        .riven-switch {
+          font-size: 13px;
+          gap: 6px;
+          margin: 0;
+        }
+        .weapon-rank-heading {
+          flex-wrap: wrap;
+          font-size: 12px;
+        }
+        .barrel-control {
+          font-size: 12px;
+        }
+        .barrel-control select {
+          font-size: 16px;
+        }
+        .weapon-rank .rank-buttons {
+          gap: 6px;
+        }
+        .weapon-rank .rank-buttons button {
+          font-size: 12px;
+        }
+        footer {
+          flex-wrap: wrap;
+          font-size: 11px;
+          margin-top: 16px;
+        }
+        footer a {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
+        }
+      }
+      @media (max-width: 640px) {
+        .rail-content {
+          display: block;
+        }
+        .rail-section:nth-child(2) {
+          border-left: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .weapons {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 479px) {
+        .weapon-rank .rank-buttons {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
     </style>
   </head>
   <body>
@@ -759,177 +1076,185 @@
               <h1>Vicious Spread</h1>
             </div>
           </header>
-          <aside class="rail" aria-label="Shared simulation controls">
-            <section class="rail-section">
-              <p class="eyebrow">01 / Range & Haste</p>
-              <div class="control">
-                <div class="control-line">
-                  <label for="distance">Target distance</label
-                  ><span class="unit-number"
-                    ><input
-                      id="distanceNumber"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value="25"
-                      aria-label="Target distance in meters"
-                    />m</span
+          <details class="rail" id="controls" open>
+            <summary class="rail-summary">Simulation controls</summary>
+            <div class="rail-content">
+              <section class="rail-section">
+                <p class="eyebrow">01 / Range & Haste</p>
+                <div class="control">
+                  <div class="control-line">
+                    <label for="distance">Target distance</label
+                    ><span class="unit-number"
+                      ><input
+                        id="distanceNumber"
+                        type="number"
+                        min="1"
+                        max="100"
+                        value="25"
+                        aria-label="Target distance in meters"
+                      />m</span
+                    >
+                  </div>
+                  <input
+                    id="distance"
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value="25"
+                  />
+                  <div class="end-labels">
+                    <span>1 m</span><span>100 m</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <div class="control-line">
+                    <label for="mote">Displayed haste</label
+                    ><span class="unit-number"
+                      ><input
+                        id="moteNumber"
+                        type="number"
+                        min="100"
+                        max="1500"
+                        step="1"
+                        value="762"
+                        aria-label="Displayed Haste Mote percentage"
+                      />%</span
+                    >
+                  </div>
+                  <input
+                    id="mote"
+                    type="range"
+                    min="100"
+                    max="1500"
+                    step="1"
+                    value="762"
+                  />
+                  <div class="end-labels">
+                    <span>100%</span><span>1,500%</span>
+                  </div>
+                  <div id="moteBonus" class="mote-readout">
+                    +1,143% fire rate
+                  </div>
+                </div>
+              </section>
+              <section class="rail-section">
+                <p class="eyebrow">02 / Mods</p>
+                <div class="mod-group">
+                  <p class="mod-heading">Multishot</p>
+                  <label class="switch-row"
+                    ><input id="galvanized" type="checkbox" checked /><span
+                      class="switch-copy"
+                      >Galvanized Hell <small>+230%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
+                    ><input id="vigilante" type="checkbox" /><span
+                      class="switch-copy"
+                      >Vigilante Armaments <small>+60%</small></span
+                    ></label
+                  >
+                  <label
+                    class="switch-row"
+                    title="Sobek and Kuva Sobek only. Maximum 15 stacks, active on the next magazine after reload."
+                    ><input id="clipDelegation" type="checkbox" /><span
+                      class="switch-copy"
+                      >Clip Delegation <small>+225% · Sobeks</small></span
+                    ></label
                   >
                 </div>
-                <input
-                  id="distance"
-                  type="range"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value="25"
-                />
-                <div class="end-labels"><span>1 m</span><span>100 m</span></div>
-              </div>
-              <div class="control">
-                <div class="control-line">
-                  <label for="mote">Displayed haste</label
-                  ><span class="unit-number"
-                    ><input
-                      id="moteNumber"
-                      type="number"
-                      min="100"
-                      max="1500"
-                      step="1"
-                      value="762"
-                      aria-label="Displayed Haste Mote percentage"
-                    />%</span
+                <div class="mod-group">
+                  <p class="mod-heading">
+                    Fire rate <span id="fireModsBonus">+180%</span>
+                  </p>
+                  <label class="switch-row"
+                    ><input id="barrage" type="checkbox" checked /><span
+                      class="switch-copy"
+                      >Shotgun Barrage <small>+90%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
+                    ><input id="amalgamBarrage" type="checkbox" /><span
+                      class="switch-copy"
+                      >Amalgam Shotgun Barrage <small>+85%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
+                    ><input id="frail" type="checkbox" checked /><span
+                      class="switch-copy"
+                      >Frail Momentum <small>+90%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
+                    ><input id="blast" type="checkbox" /><span
+                      class="switch-copy"
+                      >Accelerated Blast <small>+60%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
+                    ><input id="fervor" type="checkbox" /><span
+                      class="switch-copy"
+                      >Vigilante Fervor <small>+45%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
+                    ><input id="magnetic" type="checkbox" /><span
+                      class="switch-copy"
+                      >Magnetic Strafe <small>+40%</small></span
+                    ></label
                   >
                 </div>
-                <input
-                  id="mote"
-                  type="range"
-                  min="100"
-                  max="1500"
-                  step="1"
-                  value="762"
-                />
-                <div class="end-labels">
-                  <span>100%</span><span>1,500%</span>
+              </section>
+              <section
+                class="rail-section shot-sample"
+                aria-label="Shot sample controls"
+              >
+                <p class="eyebrow">03 / Shot sample</p>
+                <div class="control">
+                  <div class="control-line">
+                    <label for="history">Visible shots</label
+                    ><span id="historyValue" class="unit-number">10</span>
+                  </div>
+                  <input
+                    id="history"
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value="10"
+                  />
                 </div>
-                <div id="moteBonus" class="mote-readout">+1,143% fire rate</div>
-              </div>
-            </section>
-            <section class="rail-section">
-              <p class="eyebrow">02 / Mods</p>
-              <div class="mod-group">
-                <p class="mod-heading">Multishot</p>
-                <label class="switch-row"
-                  ><input id="galvanized" type="checkbox" checked /><span
-                    class="switch-copy"
-                    >Galvanized Hell <small>+230%</small></span
-                  ></label
-                >
-                <label class="switch-row"
-                  ><input id="vigilante" type="checkbox" /><span
-                    class="switch-copy"
-                    >Vigilante Armaments <small>+60%</small></span
-                  ></label
-                >
-                <label
-                  class="switch-row"
-                  title="Sobek and Kuva Sobek only. Maximum 15 stacks, active on the next magazine after reload."
-                  ><input id="clipDelegation" type="checkbox" /><span
-                    class="switch-copy"
-                    >Clip Delegation <small>+225% · Sobeks</small></span
-                  ></label
-                >
-              </div>
-              <div class="mod-group">
-                <p class="mod-heading">
-                  Fire rate <span id="fireModsBonus">+180%</span>
-                </p>
-                <label class="switch-row"
-                  ><input id="barrage" type="checkbox" checked /><span
-                    class="switch-copy"
-                    >Shotgun Barrage <small>+90%</small></span
-                  ></label
-                >
-                <label class="switch-row"
-                  ><input id="amalgamBarrage" type="checkbox" /><span
-                    class="switch-copy"
-                    >Amalgam Shotgun Barrage <small>+85%</small></span
-                  ></label
-                >
-                <label class="switch-row"
-                  ><input id="frail" type="checkbox" checked /><span
-                    class="switch-copy"
-                    >Frail Momentum <small>+90%</small></span
-                  ></label
-                >
-                <label class="switch-row"
-                  ><input id="blast" type="checkbox" /><span class="switch-copy"
-                    >Accelerated Blast <small>+60%</small></span
-                  ></label
-                >
-                <label class="switch-row"
-                  ><input id="fervor" type="checkbox" /><span
-                    class="switch-copy"
-                    >Vigilante Fervor <small>+45%</small></span
-                  ></label
-                >
-                <label class="switch-row"
-                  ><input id="magnetic" type="checkbox" /><span
-                    class="switch-copy"
-                    >Magnetic Strafe <small>+40%</small></span
-                  ></label
-                >
-              </div>
-            </section>
-            <section
-              class="rail-section shot-sample"
-              aria-label="Shot sample controls"
-            >
-              <p class="eyebrow">03 / Shot sample</p>
-              <div class="control">
-                <div class="control-line">
-                  <label for="history">Visible shots</label
-                  ><span id="historyValue" class="unit-number">10</span>
+                <div class="buttons">
+                  <button
+                    id="play"
+                    type="button"
+                    class="button primary"
+                    aria-pressed="false"
+                  >
+                    ▶ Play</button
+                  ><button
+                    id="singleShot"
+                    type="button"
+                    class="button"
+                    title="Fire one shot (Space)"
+                  >
+                    + Shot</button
+                  ><button
+                    id="reset"
+                    type="button"
+                    class="button quiet"
+                    title="Start a fresh shot sample"
+                    aria-label="New shot sample"
+                  >
+                    ↺
+                  </button>
                 </div>
-                <input
-                  id="history"
-                  type="range"
-                  min="1"
-                  max="20"
-                  step="1"
-                  value="10"
-                />
-              </div>
-              <div class="buttons">
-                <button
-                  id="play"
-                  type="button"
-                  class="button primary"
-                  aria-pressed="false"
-                >
-                  ▶ Play</button
-                ><button
-                  id="singleShot"
-                  type="button"
-                  class="button"
-                  title="Fire one shot (Space)"
-                >
-                  + Shot</button
-                ><button
-                  id="reset"
-                  type="button"
-                  class="button quiet"
-                  title="Start a fresh shot sample"
-                  aria-label="New shot sample"
-                >
-                  ↺
+                <button id="moveDrones" type="button" class="button quiet">
+                  ↻ Move drones
                 </button>
-              </div>
-              <button id="moveDrones" type="button" class="button quiet">
-                ↻ Move drones
-              </button>
-            </section>
-          </aside>
+              </section>
+            </div>
+          </details>
           <main class="workspace" data-view="side">
             <div class="plot-toolbar">
               <div
@@ -1036,6 +1361,10 @@
         const MAX_DPR = 2;
         const VIEWPORT_INSET = 6;
         const MAX_LAYOUT_WIDTH = 1995;
+        const MIN_RANK_CELL_WIDTH = 260;
+        const compactLayout = window.matchMedia(
+          "(max-width: 1100px), (hover: none) and (pointer: coarse)",
+        );
         const RIVEN_BASE_VALUES = { multishot: 119.7, fireRate: 89.9999982 };
         const RIVEN_FORMAT_FACTORS = { "2p1n": 1.2375, "3p1n": 0.9375 };
         const RIVEN_FIELDS = [
@@ -1200,10 +1529,35 @@
           state.distance *
           Math.tan((angle * (1 + spreadBonus(rank)) * Math.PI) / 180);
 
-        // Fit the full comparison into the viewport without changing its physical scale.
-        let fitFrame = 0;
+        // Desktop fits one viewport; compact layouts keep controls at their natural size.
+        let fitFrame = 0,
+          previousCompact = null;
         function fitWorkspace() {
           fitFrame = 0;
+          const compact = compactLayout.matches;
+          if (compact !== previousCompact) {
+            $("controls").open = !compact;
+            previousCompact = compact;
+          }
+          if (compact) {
+            for (const property of ["width", "transform", "left", "top"])
+              shell.style.removeProperty(property);
+            const cardWidth = ui.get(weapons[0].id).article.clientWidth;
+            const plotWidth = $("weapons").clientWidth - 2;
+            const cols = rankColumns(plotWidth);
+            const rows = Math.ceil(RANK_COUNT / cols);
+            const plotHeight =
+              state.view === "ranks"
+                ? rows * Math.min(360, Math.ceil(plotWidth / cols + 66))
+                : clamp(plotWidth * 0.9, 280, 520);
+            shell.style.setProperty("--preview-height", cardWidth - 4 + "px");
+            shell.style.setProperty(
+              "--plot-height",
+              Math.round(plotHeight) + "px",
+            );
+            shell.dataset.fitted = "";
+            return;
+          }
           const viewport = window.visualViewport;
           const availableWidth = viewport?.width || innerWidth,
             availableHeight = viewport?.height || innerHeight;
@@ -1748,10 +2102,20 @@
           };
         }
         function plotLayout() {
-          const cols = state.view === "overlay" ? 1 : RANK_COUNT;
+          const cols =
+            state.view === "overlay"
+              ? 1
+              : rankColumns($("canvasWrap").clientWidth);
+          const rows =
+            state.view === "overlay" ? 1 : Math.ceil(RANK_COUNT / cols);
           const plotHeight =
             parseFloat(shell.style.getPropertyValue("--plot-height")) || 200;
-          return { cols, height: Math.round(plotHeight) };
+          return { cols, rows, height: Math.round(plotHeight) };
+        }
+        function rankColumns(plotWidth) {
+          return compactLayout.matches
+            ? clamp(Math.floor(plotWidth / MIN_RANK_CELL_WIDTH), 1, RANK_COUNT)
+            : RANK_COUNT;
         }
         function plotCells() {
           const active = getActive();
@@ -1787,13 +2151,14 @@
                 ]
               : [];
           const w = weapons.find((w) => w.id === state.sweep);
-          const { cols } = plotLayout(),
-            cw = width / cols;
+          const { cols, rows } = plotLayout(),
+            cw = width / cols,
+            ch = height / rows;
           return Array.from({ length: RANK_COUNT }, (_, i) => ({
-            x: i * cw,
-            y: 0,
+            x: (i % cols) * cw,
+            y: Math.floor(i / cols) * ch,
             w: cw,
-            h: height,
+            h: ch,
             weapons: [w],
             rank: i - 1,
           }));
@@ -2247,12 +2612,14 @@
           resizeObserver.observe($("weapons"));
           const fitObserver = new ResizeObserver(queueWorkspaceFit);
           fitObserver.observe(shell);
+          fitObserver.observe($("weapons"));
           const onViewportResize = () => {
             fitWorkspace();
             requestPaint(true);
           };
           window.addEventListener("resize", onViewportResize);
           window.visualViewport?.addEventListener("resize", onViewportResize);
+          compactLayout.addEventListener("change", onViewportResize);
           window.addEventListener("pagehide", () => {
             clearTimeout(timer);
             if (frame) cancelAnimationFrame(frame);
