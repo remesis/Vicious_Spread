@@ -794,7 +794,7 @@
                       id="moteNumber"
                       type="number"
                       min="100"
-                      max="1000"
+                      max="1500"
                       step="1"
                       value="762"
                       aria-label="Displayed Haste Mote percentage"
@@ -805,12 +805,12 @@
                   id="mote"
                   type="range"
                   min="100"
-                  max="1000"
+                  max="1500"
                   step="1"
                   value="762"
                 />
                 <div class="end-labels">
-                  <span>100%</span><span>1,000%</span>
+                  <span>100%</span><span>1,500%</span>
                 </div>
                 <div id="moteBonus" class="mote-readout">+1,143% fire rate</div>
               </div>
@@ -2172,7 +2172,7 @@
         // Shared controls and page lifecycle.
         function bindEvents() {
           bindPair("distance", "distance", 1, 100, 1);
-          bindPair("mote", "mote", 100, 1000, 1);
+          bindPair("mote", "mote", 100, 1500, 1);
           $("moveDrones").addEventListener("click", () => {
             state.targetSeed += 883;
             dirtyStats = true;
