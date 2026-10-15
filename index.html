@@ -1168,6 +1168,12 @@
                     Fire rate <span id="fireModsBonus">+180%</span>
                   </p>
                   <label class="switch-row"
+                    ><input id="tempo" type="checkbox" /><span
+                      class="switch-copy"
+                      >Arcane Tempo <small>+90%</small></span
+                    ></label
+                  >
+                  <label class="switch-row"
                     ><input id="barrage" type="checkbox" checked /><span
                       class="switch-copy"
                       >Shotgun Barrage <small>+90%</small></span
@@ -1469,6 +1475,7 @@
           vigilante: false,
           clipDelegation: false,
           barrage: 90,
+          tempo: false,
           frail: true,
           blast: false,
           fervor: false,
@@ -1497,6 +1504,7 @@
           ["galvanized", "galv", true],
           ["vigilante", "vigilante", true],
           ["clipDelegation", "clipDelegation", true],
+          ["tempo", "tempo", false],
           ["frail", "frail", false],
           ["blast", "blast", false],
           ["fervor", "fervor", false],
@@ -1607,6 +1615,7 @@
           const hasteBonus = state.mote * 1.5;
           const fireMods =
             state.barrage +
+            (state.tempo ? 90 : 0) +
             (state.frail ? 90 : 0) +
             (state.blast ? 60 : 0) +
             (state.fervor ? 45 : 0) +
