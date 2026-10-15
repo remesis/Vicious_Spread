@@ -1,888 +1,2300 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vicious Spread Visualizer</title>
-  <style>
-    :root {
-      --bg: #0b1117;
-      --text: #e7f6ff;
-      --muted: #94a7b8;
-      --cyan: #00ffff;
-      --green: #39ff14;
-      --red: #8c1414;
-      --orange: #ff8c00;
-      --purple: #b46cff;
-      --border: rgba(255,255,255,0.08);
-      --shadow: 0 8px 24px rgba(0,0,0,0.22);
-      --radius: 16px;
-      --disabled: rgba(255,255,255,0.28);
-      --disabled-bg: rgba(255,255,255,0.04);
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Inter, system-ui, Arial, sans-serif;
-      background:
-        radial-gradient(circle at top, rgba(0,255,255,0.08), transparent 30%),
-        linear-gradient(180deg, #081018 0%, #0b1117 100%);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .wrap {
-      max-width: 1520px;
-      margin: 0 auto;
-      padding: 10px 12px 12px;
-    }
-
-    .header {
-      margin-bottom: 8px;
-    }
-
-    .title {
-      font-size: clamp(1.25rem, 1.8vw, 1.9rem);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      margin: 0;
-      line-height: 1.1;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(320px, 1fr));
-      gap: 10px;
-      margin-bottom: 10px;
-      align-items: stretch;
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 12px 14px;
-      min-height: 108px;
-    }
-
-    .card-title {
-      margin: 0;
-      font-size: 0.95rem;
-      font-weight: 800;
-      line-height: 1.1;
-      white-space: nowrap;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .dual-toggle-wrap {
-      display: grid;
-      grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(170px, 1fr));
-      gap: 18px;
-      align-items: stretch;
-      justify-content: space-between;
-    }
-
-    .toggle-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      justify-content: center;
-      min-height: 84px;
-    }
-
-    .toggle-group-title {
-      font-size: 0.82rem;
-      font-weight: 800;
-      color: var(--muted);
-      line-height: 1;
-    }
-
-    .weapon-segmented {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-    }
-
-    .weapon-option {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: #0b141d;
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 9px 10px;
-      font-weight: 800;
-      font-size: 0.84rem;
-      line-height: 1.1;
-      cursor: pointer;
-      transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-      text-align: center;
-    }
-
-    .weapon-option.active {
-      color: var(--text);
-      background: rgba(0,255,255,0.08);
-      border-color: rgba(0,255,255,0.22);
-      box-shadow: 0 0 12px rgba(0,255,255,0.18);
-    }
-
-    .toggle-shell {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      user-select: none;
-      flex-wrap: nowrap;
-      justify-content: center;
-      width: 100%;
-    }
-
-    .toggle-label {
-      font-weight: 800;
-      color: var(--muted);
-      transition: color 0.2s ease, text-shadow 0.2s ease;
-      white-space: nowrap;
-      cursor: pointer;
-      font-size: 0.92rem;
-      line-height: 1;
-    }
-
-    .toggle-label.active {
-      color: var(--text);
-      text-shadow: 0 0 12px rgba(0,255,255,0.3);
-    }
-
-    .switch {
-      position: relative;
-      width: 70px;
-      height: 32px;
-      background: #0b141d;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      cursor: pointer;
-      flex: 0 0 auto;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-    }
-
-    .switch::before {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: linear-gradient(180deg, #67ffff, #00d6d6);
-      box-shadow: 0 0 12px rgba(0,255,255,0.42);
-      transition: transform 0.22s ease;
-    }
-
-    .switch.normal::before,
-    .switch.off::before {
-      transform: translateX(38px);
-    }
-
-    .slider-block.disabled .card-title,
-    .slider-block.disabled .range-meta {
-      color: var(--disabled);
-    }
-
-    .slider-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 6px;
-      min-height: 28px;
-    }
-
-    .slider-label {
-      font-weight: 800;
-      font-size: 0.92rem;
-      line-height: 1.1;
-    }
-
-    .value-badge {
-      color: var(--text);
-      background: rgba(0,255,255,0.08);
-      border: 1px solid rgba(0,255,255,0.16);
-      border-radius: 999px;
-      padding: 5px 11px;
-      font-weight: 800;
-      min-width: 88px;
-      text-align: center;
-      font-size: 0.9rem;
-      line-height: 1;
-    }
-
-    .value-badge.disabled {
-      color: var(--disabled);
-      background: var(--disabled-bg);
-      border-color: rgba(255,255,255,0.08);
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: #00e5ff;
-      cursor: pointer;
-      margin: 2px 0 0;
-    }
-
-    input[type="range"]:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      filter: grayscale(1);
-    }
-
-    .range-meta {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1;
-    }
-
-    .canvas-card {
-      padding: 10px;
-    }
-
-    canvas {
-      width: 100%;
-      height: auto;
-      display: block;
-      background:
-        radial-gradient(circle at center, rgba(0,255,255,0.04), transparent 45%),
-        rgba(255,255,255,0.01);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .dot.green { background: var(--green); }
-    .dot.red { background: var(--red); }
-    .dot.orange { background: var(--orange); }
-    .dot.cyan { background: var(--cyan); }
-    .dot.purple { background: var(--purple); }
-
-    @media (max-width: 860px) {
-      .controls {
-        grid-template-columns: 1fr;
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Vicious Spread — Shotgun Comparison</title>
+    <style>
+      :root {
+        --bg: #101315;
+        --panel: #181c1f;
+        --plot: #121719;
+        --line: #303739;
+        --text: #eceee9;
+        --muted: #9ba6a5;
+        --accent: #39ff14;
+        --gap: 10px;
       }
-
-      .dual-toggle-wrap {
-        grid-template-columns: 1fr;
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      a,
+      input,
+      select {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button,
+      select,
+      input[type="range"],
+      input[type="checkbox"] {
+        cursor: pointer;
+      }
+      button {
+        color: inherit;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+      button:disabled,
+      input:disabled {
+        cursor: default;
+        opacity: 0.4;
+      }
+      a {
+        color: var(--muted);
+        text-underline-offset: 4px;
+      }
+      .viewport {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+      }
+      .shell {
+        position: absolute;
+        width: 1280px;
+        padding: 16px;
+        transform-origin: top left;
+        visibility: hidden;
+        --preview-height: 200px;
+        --plot-height: 200px;
+      }
+      .shell[data-fitted] {
+        visibility: visible;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin: 0;
+        grid-area: brand;
+      }
+      .brand {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .brand-mark {
+        width: 37px;
+        height: 37px;
+        border: 1px solid var(--accent);
+        border-radius: 50%;
+        position: relative;
+        color: var(--accent);
+        flex: none;
+      }
+      .brand-mark:before,
+      .brand-mark:after {
+        content: "";
+        position: absolute;
+        background: currentColor;
+        border-radius: 50%;
+        width: 4px;
+        height: 4px;
+        top: 16px;
+        left: 16px;
+        box-shadow:
+          9px -7px 0 -1px currentColor,
+          -9px -6px 0 -1px currentColor,
+          8px 8px 0 -1px currentColor,
+          -7px 9px 0 -1px currentColor;
+      }
+      .brand-mark:after {
+        width: 1px;
+        height: 47px;
+        top: -6px;
+        left: 17px;
+        opacity: 0.4;
+        box-shadow: none;
+        transform: rotate(45deg);
+        border-radius: 0;
+      }
+      h1 {
+        font-size: 26px;
+        line-height: 1.1;
+        letter-spacing: -1.2px;
+        font-weight: 650;
+        margin: 0;
+        white-space: nowrap;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 218px minmax(0, 1fr);
+        grid-template-areas: "brand toolbar" "rail weapons";
+        gap: var(--gap);
+        align-items: stretch;
+      }
+      .layout:not([data-view="side"]) {
+        grid-template-areas: "brand toolbar" "rail plot" "rail weapons";
+        grid-template-rows: auto var(--plot-height) auto;
+      }
+      .rail {
+        grid-area: rail;
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .rail-section {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .rail-section:last-child {
+        border-bottom: 0;
+      }
+      .eyebrow {
+        font:
+          10px/1.4 ui-monospace,
+          SFMono-Regular,
+          Consolas,
+          monospace;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      .control {
+        margin-top: 12px;
+      }
+      .control:first-of-type {
+        margin-top: 0;
+      }
+      .control-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 5px;
+      }
+      .control-line label {
+        font-size: 12px;
+      }
+      .unit-number {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--accent);
+        font:
+          12px ui-monospace,
+          monospace;
+      }
+      .unit-number input {
+        width: 55px;
+        padding: 3px;
+        text-align: right;
+        color: inherit;
+        background: #121617;
+        border: 1px solid #3b4440;
+        border-radius: 4px;
+        -moz-appearance: textfield;
+      }
+      input::-webkit-inner-spin-button,
+      input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type="range"] {
+        display: block;
+        width: 100%;
+        height: 15px;
+        margin: 0;
+        accent-color: var(--accent);
+      }
+      .end-labels {
+        display: flex;
+        justify-content: space-between;
+        color: #74817f;
+        font:
+          10px ui-monospace,
+          monospace;
+        margin-top: 4px;
+      }
+      .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 15px 0;
+        cursor: pointer;
+      }
+      .switch-row:last-child {
+        margin-bottom: 0;
+      }
+      .switch-row input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 30px;
+        height: 17px;
+        border: 1px solid #56605e;
+        border-radius: 15px;
+        background: #2b3233;
+        position: relative;
+        margin: 0;
+        flex: none;
+      }
+      .switch-row input:before {
+        content: "";
+        width: 11px;
+        height: 11px;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        background: #9ba6a5;
+        border-radius: 50%;
+      }
+      .switch-row input:checked {
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+      .switch-row input:checked:before {
+        left: 15px;
+        background: #14220e;
+      }
+      .switch-copy {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        font-size: 11px;
+      }
+      .switch-copy small {
+        color: var(--muted);
+        font:
+          10px ui-monospace,
+          monospace;
+        white-space: nowrap;
+      }
+      .rank-buttons {
+        display: grid;
+        grid-template-columns: 1.3fr repeat(6, 1fr);
+        gap: 3px;
+      }
+      .rank-buttons button {
+        background: #121617;
+        border: 1px solid #38403f;
+        border-radius: 4px;
+        padding: 7px 0;
+        font:
+          11px ui-monospace,
+          monospace;
+      }
+      .rank-buttons button[aria-pressed="true"] {
+        background: var(--accent);
+        color: #14220e;
+        border-color: var(--accent);
+      }
+      .buttons {
+        display: flex;
+        gap: 7px;
+        margin-top: 16px;
+      }
+      .button {
+        border: 1px solid #424c48;
+        background: #252d29;
+        border-radius: 5px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 550;
+      }
+      .button.primary {
+        color: #14220e;
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .button.quiet {
+        background: transparent;
+      }
+      #play {
+        flex: 1;
+      }
+      .workspace {
+        display: contents;
+      }
+      .segmented {
+        display: flex;
+        padding: 3px;
+        background: #1b2022;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        gap: 2px;
+        flex: none;
+      }
+      .segmented button {
+        background: none;
+        border: 0;
+        color: var(--muted);
+        padding: 7px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .segmented button[aria-pressed="true"] {
+        color: var(--accent);
+        background: #353d3b;
+      }
+      .plot-toolbar {
+        grid-area: toolbar;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        min-height: 46px;
+        min-width: 0;
+        background: var(--plot);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 9px 12px;
+      }
+      .plot-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 7px 14px;
+        margin-left: auto;
+      }
+      .toolbar-actions {
+        display: flex;
+        align-items: center;
         gap: 10px;
+        min-width: 0;
+        max-width: 100%;
       }
-    }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="header">
-      <h1 class="title">Vicious Spread Visualizer</h1>
-    </div>
-
-    <div class="controls">
-      <div class="card">
-        <div class="dual-toggle-wrap">
-          <div class="toggle-group">
-            <div class="toggle-group-title">Weapon</div>
-            <div class="weapon-segmented" role="tablist" aria-label="Weapon mode">
-              <button id="labelKuva" class="weapon-option active" type="button">Kuva Sobek</button>
-              <button id="labelNormal" class="weapon-option" type="button">Normal Sobek</button>
-              <button id="labelBoar" class="weapon-option" type="button">Boar Prime</button>
+      #viewMode {
+        flex: 0 1 auto;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+      .plot-toolbar .segmented button {
+        font-size: 11px;
+        padding: 6px 8px;
+      }
+      .rank-switch {
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+        flex: none;
+        max-width: 100%;
+      }
+      .rank-switch:has(> button[aria-pressed="true"]) {
+        background: #353d3b;
+      }
+      .baseline-label {
+        color: var(--muted);
+        font:
+          10px ui-monospace,
+          monospace;
+      }
+      .plot-scale {
+        color: var(--muted);
+        font:
+          10px ui-monospace,
+          monospace;
+        text-align: right;
+      }
+      .canvas-wrap {
+        grid-area: plot;
+        position: relative;
+        height: 380px;
+        min-width: 0;
+        background: var(--plot);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: pan-y;
+      }
+      .empty {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        text-align: center;
+        color: var(--muted);
+        pointer-events: none;
+      }
+      .empty[hidden] {
+        display: none;
+      }
+      #sweepWeapon {
+        width: 126px;
+        max-width: 140px;
+        font-size: 11px;
+        background: transparent;
+        border: 0;
+        border-left: 1px solid #59625e;
+        border-radius: 0;
+        margin-right: 4px;
+      }
+      .tiny-button {
+        border: 0;
+        background: none;
+        color: var(--muted);
+        font-size: 11px;
+        padding: 3px;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .weapons {
+        grid-area: weapons;
+        display: grid;
+        grid-template-columns: repeat(var(--weapon-count, 5), minmax(0, 1fr));
+        gap: var(--gap);
+        min-width: 0;
+      }
+      .weapon {
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border: 1px solid var(--weapon);
+        border-radius: 8px;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .weapon-header {
+        padding: 12px 12px 0;
+      }
+      .weapon-plot {
+        position: relative;
+        background: var(--plot);
+        width: 100%;
+        height: var(--preview-height);
+      }
+      .weapon-plot canvas {
+        position: absolute;
+        inset: 0;
+      }
+      .weapon-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 12px;
+      }
+      .workspace[data-view="side"] .canvas-wrap,
+      .workspace:not([data-view="side"]) .weapon-plot {
+        display: none;
+      }
+      .weapon.off .weapon-body,
+      .weapon.off .weapon-sub,
+      .weapon.off .weapon-plot {
+        opacity: 0.38;
+      }
+      .weapon-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .weapon-title input {
+        margin: 0;
+        width: 13px;
+        height: 13px;
+        accent-color: var(--accent);
+        flex: none;
+      }
+      .weapon-sub {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 10px;
+        margin: 4px 0 6px 21px;
+        min-height: 16px;
+      }
+      .weapon-sub > span {
+        white-space: nowrap;
+      }
+      .weapon-sub strong {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .statline {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 8px;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      .stat-number {
+        color: var(--weapon);
+        font-size: 23px;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat-name {
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .weapon-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 9px;
+      }
+      .weapon-row input[type="number"] {
+        width: 62px;
+        background: #111617;
+        border: 1px solid #3d4643;
+        color: var(--text);
+        border-radius: 4px;
+        padding: 4px 6px;
+        font:
+          11px ui-monospace,
+          monospace;
+        text-align: right;
+      }
+      select {
+        background: #111617;
+        border: 1px solid #3d4643;
+        color: var(--text);
+        border-radius: 4px;
+        padding: 4px 5px;
+        max-width: 100%;
+      }
+      .weapon-rank {
+        padding-top: 12px;
+      }
+      .weapon-rank-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 27px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .barrel-control {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 9px;
+      }
+      .barrel-control select {
+        font-size: 10px;
+      }
+      .weapon-rank .rank-buttons {
+        width: 100%;
+        margin-top: 8px;
+      }
+      .weapon-rank .rank-buttons button {
+        padding: 7px 0;
+        font-size: 10px;
+      }
+      .riven-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 5px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .weapon-overcharge {
+        margin: 0 0 10px;
+        gap: 8px;
+      }
+      .weapon-overcharge .switch-copy {
+        min-width: 0;
+        gap: 5px;
+        font-size: 10px;
+      }
+      .weapon-overcharge .switch-copy small {
+        font-size: 9px;
+      }
+      .riven-heading > span {
+        min-width: 0;
+      }
+      .riven-format {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 88px;
+        margin: 0;
+        padding: 2px;
+      }
+      .riven-format button {
+        padding: 5px 2px;
+        font:
+          9px ui-monospace,
+          monospace;
+      }
+      .riven-control {
+        margin-top: 9px;
+      }
+      .riven-control .weapon-row {
+        margin: 0 0 6px;
+      }
+      .riven-switch {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        gap: 5px;
+      }
+      .riven-switch input {
+        width: 26px;
+        height: 15px;
+      }
+      .riven-switch input:before {
+        width: 9px;
+        height: 9px;
+      }
+      .riven-switch input:checked:before {
+        left: 13px;
+      }
+      .riven-control .weapon-row input[type="number"] {
+        width: 55px;
+      }
+      .riven-control .end-labels {
+        font-size: 9px;
+      }
+      .mod-group + .mod-group {
+        border-top: 1px solid var(--line);
+        margin-top: 12px;
+        padding-top: 10px;
+      }
+      .mod-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        color: var(--muted);
+        font:
+          10px ui-monospace,
+          monospace;
+        margin: 0 0 7px;
+      }
+      .mod-group .switch-row {
+        margin: 7px 0;
+        gap: 8px;
+      }
+      .mote-readout {
+        color: var(--accent);
+        font:
+          11px ui-monospace,
+          monospace;
+        margin-top: 8px;
+      }
+      .shot-sample .control {
+        margin: 0;
+      }
+      .shot-sample .buttons {
+        margin-top: 9px;
+        gap: 5px;
+      }
+      .shot-sample .button {
+        padding: 7px 8px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .shot-sample #play,
+      .shot-sample #singleShot {
+        flex: 1;
+      }
+      .shot-sample #reset {
+        min-width: 30px;
+      }
+      .shot-sample #moveDrones {
+        width: 100%;
+        margin-top: 7px;
+      }
+      footer {
+        margin-top: var(--gap);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: #75827e;
+        font:
+          10px ui-monospace,
+          monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="viewport">
+      <div class="shell">
+        <div class="layout" data-view="side">
+          <header>
+            <div class="brand">
+              <span class="brand-mark" aria-hidden="true"></span>
+              <h1>Vicious Spread</h1>
             </div>
-          </div>
-
-          <div class="toggle-group">
-            <div class="toggle-group-title">Riven</div>
-            <div class="toggle-shell">
-              <span id="labelRivenOn" class="toggle-label active">Riven</span>
-              <button id="rivenToggle" class="switch" aria-label="Toggle riven mode"></button>
-              <span id="labelRivenOff" class="toggle-label">No Riven</span>
+          </header>
+          <aside class="rail" aria-label="Shared simulation controls">
+            <section class="rail-section">
+              <p class="eyebrow">01 / Range & Haste</p>
+              <div class="control">
+                <div class="control-line">
+                  <label for="distance">Target distance</label
+                  ><span class="unit-number"
+                    ><input
+                      id="distanceNumber"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value="25"
+                      aria-label="Target distance in meters"
+                    />m</span
+                  >
+                </div>
+                <input
+                  id="distance"
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value="25"
+                />
+                <div class="end-labels"><span>1 m</span><span>100 m</span></div>
+              </div>
+              <div class="control">
+                <div class="control-line">
+                  <label for="mote">Displayed haste</label
+                  ><span class="unit-number"
+                    ><input
+                      id="moteNumber"
+                      type="number"
+                      min="100"
+                      max="1000"
+                      step="1"
+                      value="762"
+                      aria-label="Displayed Haste Mote percentage"
+                    />%</span
+                  >
+                </div>
+                <input
+                  id="mote"
+                  type="range"
+                  min="100"
+                  max="1000"
+                  step="1"
+                  value="762"
+                />
+                <div class="end-labels">
+                  <span>100%</span><span>1,000%</span>
+                </div>
+                <div id="moteBonus" class="mote-readout">+1,143% fire rate</div>
+              </div>
+            </section>
+            <section class="rail-section">
+              <p class="eyebrow">02 / Mods</p>
+              <div class="mod-group">
+                <p class="mod-heading">Multishot</p>
+                <label class="switch-row"
+                  ><input id="galvanized" type="checkbox" checked /><span
+                    class="switch-copy"
+                    >Galvanized Hell <small>+230%</small></span
+                  ></label
+                >
+                <label class="switch-row"
+                  ><input id="vigilante" type="checkbox" /><span
+                    class="switch-copy"
+                    >Vigilante Armaments <small>+60%</small></span
+                  ></label
+                >
+                <label
+                  class="switch-row"
+                  title="Sobek and Kuva Sobek only. Maximum 15 stacks, active on the next magazine after reload."
+                  ><input id="clipDelegation" type="checkbox" /><span
+                    class="switch-copy"
+                    >Clip Delegation <small>+225% · Sobeks</small></span
+                  ></label
+                >
+              </div>
+              <div class="mod-group">
+                <p class="mod-heading">
+                  Fire rate <span id="fireModsBonus">+180%</span>
+                </p>
+                <label class="switch-row"
+                  ><input id="barrage" type="checkbox" checked /><span
+                    class="switch-copy"
+                    >Shotgun Barrage <small>+90%</small></span
+                  ></label
+                >
+                <label class="switch-row"
+                  ><input id="amalgamBarrage" type="checkbox" /><span
+                    class="switch-copy"
+                    >Amalgam Shotgun Barrage <small>+85%</small></span
+                  ></label
+                >
+                <label class="switch-row"
+                  ><input id="frail" type="checkbox" checked /><span
+                    class="switch-copy"
+                    >Frail Momentum <small>+90%</small></span
+                  ></label
+                >
+                <label class="switch-row"
+                  ><input id="blast" type="checkbox" /><span class="switch-copy"
+                    >Accelerated Blast <small>+60%</small></span
+                  ></label
+                >
+                <label class="switch-row"
+                  ><input id="fervor" type="checkbox" /><span
+                    class="switch-copy"
+                    >Vigilante Fervor <small>+45%</small></span
+                  ></label
+                >
+                <label class="switch-row"
+                  ><input id="magnetic" type="checkbox" /><span
+                    class="switch-copy"
+                    >Magnetic Strafe <small>+40%</small></span
+                  ></label
+                >
+              </div>
+            </section>
+            <section
+              class="rail-section shot-sample"
+              aria-label="Shot sample controls"
+            >
+              <p class="eyebrow">03 / Shot sample</p>
+              <div class="control">
+                <div class="control-line">
+                  <label for="history">Visible shots</label
+                  ><span id="historyValue" class="unit-number">10</span>
+                </div>
+                <input
+                  id="history"
+                  type="range"
+                  min="1"
+                  max="20"
+                  step="1"
+                  value="10"
+                />
+              </div>
+              <div class="buttons">
+                <button
+                  id="play"
+                  type="button"
+                  class="button primary"
+                  aria-pressed="false"
+                >
+                  ▶ Play</button
+                ><button
+                  id="singleShot"
+                  type="button"
+                  class="button"
+                  title="Fire one shot (Space)"
+                >
+                  + Shot</button
+                ><button
+                  id="reset"
+                  type="button"
+                  class="button quiet"
+                  title="Start a fresh shot sample"
+                  aria-label="New shot sample"
+                >
+                  ↺
+                </button>
+              </div>
+              <button id="moveDrones" type="button" class="button quiet">
+                ↻ Move drones
+              </button>
+            </section>
+          </aside>
+          <main class="workspace" data-view="side">
+            <div class="plot-toolbar">
+              <div
+                class="segmented"
+                id="projection"
+                role="group"
+                aria-label="Spread projection"
+              >
+                <button
+                  type="button"
+                  data-projection="impact"
+                  aria-pressed="true"
+                >
+                  Impact plane</button
+                ><button
+                  type="button"
+                  data-projection="cone"
+                  aria-pressed="false"
+                >
+                  Cone profile
+                </button>
+              </div>
+              <div class="plot-meta">
+                <span class="baseline-label">Dashed: no Vicious Spread</span
+                ><span class="plot-scale" id="plotScale">Shared scale</span>
+                <div class="toolbar-actions">
+                  <button type="button" class="tiny-button" id="restore">
+                    Restore defaults
+                  </button>
+                  <div
+                    class="segmented"
+                    id="viewMode"
+                    role="group"
+                    aria-label="Comparison layout"
+                  >
+                    <button type="button" data-view="side" aria-pressed="true">
+                      Side by side</button
+                    ><button
+                      type="button"
+                      data-view="overlay"
+                      aria-pressed="false"
+                    >
+                      Overlay
+                    </button>
+                    <div class="rank-switch">
+                      <button
+                        type="button"
+                        data-view="ranks"
+                        aria-pressed="false"
+                      >
+                        Rank sweep</button
+                      ><select
+                        id="sweepWeapon"
+                        aria-label="Weapon for rank sweep"
+                        hidden
+                      ></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div class="toggle-group">
-            <div class="toggle-group-title">Overcharge</div>
-            <div class="toggle-shell">
-              <span id="labelOverchargeOn" class="toggle-label active">On</span>
-              <button id="overchargeToggle" class="switch" aria-label="Toggle overcharge multishot bonus"></button>
-              <span id="labelOverchargeOff" class="toggle-label">Off</span>
+            <div class="canvas-wrap" id="canvasWrap">
+              <canvas
+                id="plot"
+                role="img"
+                aria-label="Shotgun spread comparison. Numeric results and controls are available below."
+              ></canvas>
+              <div id="empty" class="empty" hidden>
+                <strong>Select a weapon below</strong
+                ><span>Choose any combination to compare.</span>
+              </div>
             </div>
-          </div>
+            <section
+              class="weapons"
+              id="weapons"
+              aria-label="Weapon configurations and results"
+            ></section>
+          </main>
         </div>
-      </div>
-
-      <div id="msBlock" class="card slider-block">
-        <div class="card-header">
-          <h2 class="card-title">Riven Multishot</h2>
-          <div id="msValue" class="value-badge">130.0%</div>
-        </div>
-        <input id="msSlider" type="range" min="80.8" max="130.4" step="0.1" value="130.0" />
-        <div class="range-meta">
-          <span id="msMinLabel">Min: 80.8%</span>
-          <span id="msMaxLabel">Max: 130.4%</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="slider-row">
-          <div class="slider-label">Target Distance</div>
-          <div id="distanceValue" class="value-badge">50m</div>
-        </div>
-        <input id="distanceSlider" type="range" min="1" max="100" step="1" value="50" />
-        <div class="range-meta">
-          <span>Min: 1m</span>
-          <span>Max: 100m</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="slider-row">
-          <div class="slider-label">Shots Per Second</div>
-          <div id="fireRateValue" class="value-badge">2/s</div>
-        </div>
-        <input id="fireRateSlider" type="range" min="1" max="8" step="1" value="2" />
-        <div class="range-meta">
-          <span>Min: 1/s</span>
-          <span>Max: 8/s</span>
-        </div>
+        <footer>
+          <a
+            href="https://discord.gg/Arbitrations"
+            target="_blank"
+            rel="noopener noreferrer"
+            >discord.gg/Arbitrations</a
+          ><a
+            href="https://arbi.guide"
+            target="_blank"
+            rel="noopener noreferrer"
+            >https://arbi.guide</a
+          >
+        </footer>
       </div>
     </div>
+    <script>
+      (() => {
+        "use strict";
 
-    <div class="card canvas-card">
-      <canvas id="spreadCanvas" width="1200" height="640"></canvas>
-
-      <div class="legend">
-        <div class="legend-item"><span class="dot cyan"></span> spread circles / spokes</div>
-        <div class="legend-item"><span class="dot green"></span> newest shot group</div>
-        <div class="legend-item"><span class="dot orange"></span> previous shot group</div>
-        <div class="legend-item"><span class="dot red"></span> older shot groups</div>
-        <div class="legend-item"><span class="dot purple"></span> drone</div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const SOBEK_BASE_HALF_ANGLE_DEG = 20.4;
-    const VICIOUS_PER_RANK = 0.1;
-    const BASE_FIXED_MS = 2.3;
-    const OVERCHARGE_MS = 3.5;
-    const PANEL_LABELS = [
-      ["None", 0],
-      ["R1", 1],
-      ["R2", 2],
-      ["R3", 3],
-      ["R4", 4],
-      ["R5", 5],
-    ];
-
-    const WEAPON_RANGES = {
-      kuva:   { label: "Kuva Sobek",         msMin: 80.8,  msMax: 130.4, msDefault: 130.0, baseHalfAngleDeg: SOBEK_BASE_HALF_ANGLE_DEG, basePellets: 5 },
-      normal: { label: "Normal Sobek",       msMin: 134.3, msMax: 216.7, msDefault: 160.0, baseHalfAngleDeg: SOBEK_BASE_HALF_ANGLE_DEG, basePellets: 5 },
-      boar:   { label: "Boar Prime", msMin: 135.3, msMax: 218.3, msDefault: 160.0, baseHalfAngleDeg: SOBEK_BASE_HALF_ANGLE_DEG * (20 / 11), basePellets: 8 },
-    };
-
-    const canvas = document.getElementById("spreadCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const labelKuva = document.getElementById("labelKuva");
-    const labelNormal = document.getElementById("labelNormal");
-    const labelBoar = document.getElementById("labelBoar");
-
-    const rivenToggle = document.getElementById("rivenToggle");
-    const labelRivenOn = document.getElementById("labelRivenOn");
-    const labelRivenOff = document.getElementById("labelRivenOff");
-
-    const overchargeToggle = document.getElementById("overchargeToggle");
-    const labelOverchargeOn = document.getElementById("labelOverchargeOn");
-    const labelOverchargeOff = document.getElementById("labelOverchargeOff");
-
-    const msBlock = document.getElementById("msBlock");
-    const msSlider = document.getElementById("msSlider");
-    const distanceSlider = document.getElementById("distanceSlider");
-    const fireRateSlider = document.getElementById("fireRateSlider");
-
-    const msValue = document.getElementById("msValue");
-    const distanceValue = document.getElementById("distanceValue");
-    const fireRateValue = document.getElementById("fireRateValue");
-    const msMinLabel = document.getElementById("msMinLabel");
-    const msMaxLabel = document.getElementById("msMaxLabel");
-
-    let weaponMode = "kuva";
-    let rivenEnabled = true;
-    let overchargeEnabled = true;
-    let panels = [];
-    let cycleStartTime = 0;
-    let lastFrameTime = 0;
-    let shotAccumulatorMs = 0;
-
-    const CYCLE_RESET_MS = 5500;
-    const MAX_VISIBLE_GROUPS = 10;
-    const STORED_GROUPS = 10;
-
-    const rivenMsMemory = {
-      kuva: WEAPON_RANGES.kuva.msDefault,
-      normal: WEAPON_RANGES.normal.msDefault,
-      boar: WEAPON_RANGES.boar.msDefault,
-    };
-
-    function halfAngleDegForRank(rankSteps) {
-      return getCurrentRange().baseHalfAngleDeg * (1 + VICIOUS_PER_RANK * rankSteps);
-    }
-
-    function spreadRadiusM(distanceM, halfAngleDeg) {
-      return distanceM * Math.tan((halfAngleDeg * Math.PI) / 180);
-    }
-
-    function getRivenMsPercent() {
-      return rivenEnabled ? Number(msSlider.value) : 0;
-    }
-
-    function expectedPelletsPerShot(rivenMsPercent) {
-      const rivenMs = rivenMsPercent / 100;
-      const fixedMs = BASE_FIXED_MS + (overchargeEnabled ? OVERCHARGE_MS : 0);
-      return (1 + fixedMs + rivenMs) * getCurrentRange().basePellets;
-    }
-
-    function spokesForExpected(expected) {
-      return Math.max(1, Math.ceil(expected));
-    }
-
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
-    }
-
-    function rand(min, max) {
-      return Math.random() * (max - min) + min;
-    }
-
-    function sampleUniqueIndices(count, maxExclusive) {
-      const arr = Array.from({ length: maxExclusive }, (_, i) => i);
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr.slice(0, count);
-    }
-
-    function pelletCountFromExpected(expected) {
-      const whole = Math.floor(expected);
-      const frac = expected - whole;
-      return whole + (Math.random() < frac ? 1 : 0);
-    }
-
-    function getCurrentRange() {
-      return WEAPON_RANGES[weaponMode];
-    }
-
-    function getShotIntervalMs() {
-      const fireRate = Number(fireRateSlider.value);
-      return 1000 / fireRate;
-    }
-
-    function formatPercent(v) {
-      return `${Number(v).toFixed(1)}%`;
-    }
-
-    function syncWeaponUI() {
-      labelKuva.classList.toggle("active", weaponMode === "kuva");
-      labelNormal.classList.toggle("active", weaponMode === "normal");
-      labelBoar.classList.toggle("active", weaponMode === "boar");
-    }
-
-    function syncRivenUI() {
-      const noRiven = !rivenEnabled;
-      rivenToggle.classList.toggle("off", noRiven);
-      labelRivenOn.classList.toggle("active", rivenEnabled);
-      labelRivenOff.classList.toggle("active", noRiven);
-
-      msSlider.disabled = noRiven;
-      msBlock.classList.toggle("disabled", noRiven);
-      msValue.classList.toggle("disabled", noRiven);
-
-      if (noRiven) {
-        msValue.textContent = "Disabled";
-      } else {
-        msValue.textContent = formatPercent(msSlider.value);
-      }
-    }
-
-    function syncOverchargeUI() {
-      const off = !overchargeEnabled;
-      overchargeToggle.classList.toggle("off", off);
-      labelOverchargeOn.classList.toggle("active", overchargeEnabled);
-      labelOverchargeOff.classList.toggle("active", off);
-    }
-
-    function storeCurrentWeaponValue() {
-      rivenMsMemory[weaponMode] = Number(msSlider.value);
-    }
-
-    function applyWeaponRange(useRememberedValue = true) {
-      const range = getCurrentRange();
-
-      msSlider.min = range.msMin;
-      msSlider.max = range.msMax;
-      msSlider.step = 0.1;
-
-      let newValue;
-      if (useRememberedValue) {
-        newValue = clamp(rivenMsMemory[weaponMode], range.msMin, range.msMax);
-      } else {
-        newValue = clamp(range.msDefault, range.msMin, range.msMax);
-      }
-
-      msSlider.value = String(newValue);
-
-      msMinLabel.textContent = `Min: ${formatPercent(range.msMin)}`;
-      msMaxLabel.textContent = `Max: ${formatPercent(range.msMax)}`;
-
-      updateLabels();
-      rebuildPanels();
-    }
-
-    function updateLabels() {
-      if (rivenEnabled) {
-        msValue.textContent = formatPercent(msSlider.value);
-      } else {
-        msValue.textContent = "Disabled";
-      }
-
-      distanceValue.textContent = `${distanceSlider.value}m`;
-      fireRateValue.textContent = `${Number(fireRateSlider.value).toFixed(0)}/s`;
-    }
-
-    function buildPanelData() {
-      const W = canvas.width;
-      const H = canvas.height;
-
-      const cols = 3;
-      const rows = 2;
-      const panelW = W / cols;
-      const panelH = H / rows;
-
-      const distanceM = Number(distanceSlider.value);
-      const rivenMsPercent = getRivenMsPercent();
-      const expected = expectedPelletsPerShot(rivenMsPercent);
-      const spokes = spokesForExpected(expected);
-
-      const maxOuterM = spreadRadiusM(distanceM, halfAngleDegForRank(5));
-      const outerMaxPx = Math.min(panelW, panelH) * 0.34;
-      const pxPerM = maxOuterM > 0 ? outerMaxPx / maxOuterM : 0;
-
-      const innerM = spreadRadiusM(distanceM, getCurrentRange().baseHalfAngleDeg);
-      const innerPx = Math.round(innerM * pxPerM);
-
-      const droneRadiusM = 1.0;
-      const dronePx = clamp(Math.round(droneRadiusM * pxPerM), 3, 36);
-
-      const built = [];
-
-      PANEL_LABELS.forEach(([label, rankSteps], idx) => {
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
-
-        const cx = col * panelW + panelW / 2;
-        const cy = row * panelH + panelH / 2;
-
-        const outerM = spreadRadiusM(distanceM, halfAngleDegForRank(rankSteps));
-        const outerPx = Math.round(outerM * pxPerM);
-
-        let minR = innerPx * 0.33;
-        let maxR = Math.max(1, outerPx - dronePx);
-        if (minR > maxR) minR = maxR * 0.5;
-
-        const theta = rand(0, Math.PI * 2);
-        const rr = rand(minR, maxR);
-        const droneX = cx + Math.cos(theta) * rr;
-        const droneY = cy + Math.sin(theta) * rr;
-
-        built.push({
-          label,
-          rankSteps,
-          cx,
-          cy,
-          panelW,
-          panelH,
-          innerPx,
-          outerPx,
-          spokes,
-          droneX,
-          droneY,
-          dronePx,
+        // Configuration and calculator state.
+        const TAU = Math.PI * 2;
+        const DRONE_RADIUS_M = 1;
+        const RANK_COUNT = 7;
+        const PLAYBACK_INTERVAL_MS = 50;
+        const MAX_DPR = 2;
+        const VIEWPORT_INSET = 6;
+        const MAX_LAYOUT_WIDTH = 1995;
+        const RIVEN_BASE_VALUES = { multishot: 119.7, fireRate: 89.9999982 };
+        const RIVEN_FORMAT_FACTORS = { "2p1n": 1.2375, "3p1n": 0.9375 };
+        const RIVEN_FIELDS = [
+          {
+            field: "riven",
+            stat: "multishot",
+            label: "Riven Multishot",
+            flag: "rivenMS",
+            resample: true,
+          },
+          {
+            field: "rivenRate",
+            stat: "fireRate",
+            label: "Riven Fire Rate",
+            flag: "rivenFR",
+            resample: false,
+          },
+        ];
+        const DEFINITIONS = [
+          {
+            id: "kuva",
+            name: "Kuva Sobek",
+            pellets: 5,
+            baseRate: 2.5,
+            disposition: 0.8,
+            angle: 16,
+            defaultRank: 5,
+            rivenFormat: "2p1n",
+            riven: 130.4,
+            rivenRate: 98,
+            color: "#d98282",
+            supportsClipDelegation: true,
+          },
+          {
+            id: "sobek",
+            name: "Sobek",
+            pellets: 5,
+            baseRate: 2.5,
+            disposition: 1.33,
+            angle: 16,
+            defaultRank: 5,
+            rivenFormat: "2p1n",
+            riven: 216.7,
+            rivenRate: 162.9,
+            color: "#77cbd1",
+            supportsClipDelegation: true,
+          },
+          {
+            id: "kohm",
+            name: "Kohm",
+            mode: "Fully spooled",
+            pellets: 12,
+            baseRate: 11 / 3,
+            disposition: 1.3,
+            angle: 20,
+            defaultRank: 5,
+            rivenFormat: "2p1n",
+            riven: 211.8,
+            rivenRate: 159.3,
+            color: "#d1bf82",
+          },
+          {
+            id: "boar",
+            name: "Boar Prime",
+            pellets: 8,
+            baseRate: 14 / 3,
+            disposition: 1.34,
+            angle: 30,
+            defaultRank: 2,
+            rivenFormat: "3p1n",
+            riven: 165.4,
+            rivenRate: 124.4,
+            color: "#a8ca83",
+          },
+          {
+            id: "strun",
+            name: "Strun Wraith",
+            pellets: 10,
+            baseRate: 2.5,
+            disposition: 1.35,
+            angle: 20,
+            defaultRank: 5,
+            rivenFormat: "3p1n",
+            riven: 166.6,
+            rivenRate: 125.3,
+            color: "#b6a1e3",
+            barrel: 5,
+            pelletsPerBarrelStack: 0.05,
+          },
+        ];
+        const $ = (id) => document.getElementById(id);
+        const shell = document.querySelector(".shell");
+        const canvas = $("plot"),
+          ctx = canvas.getContext("2d", { alpha: false });
+        const background = document.createElement("canvas"),
+          bg = background.getContext("2d", { alpha: false });
+        const state = {
+          distance: 25,
+          mote: 762,
+          targetSeed: 4919,
+          galv: true,
+          vigilante: false,
+          clipDelegation: false,
+          barrage: 90,
+          frail: true,
+          blast: false,
+          fervor: false,
+          magnetic: false,
+          history: 10,
+          view: "side",
+          projection: "impact",
+          sweep: "strun",
+          playing: false,
+          seed: 43271,
+        };
+        const weapons = DEFINITIONS.map((d, index) => ({
+          ...d,
+          index,
+          enabled: true,
+          overcharge: true,
+          rivenMS: true,
+          rivenFR: true,
+          rank: d.defaultRank,
+          shotCount: 10,
+          accumulator: 0,
           shots: [],
-        });
-      });
+          model: null,
+        }));
+        const SHARED_SWITCHES = [
+          ["galvanized", "galv", true],
+          ["vigilante", "vigilante", true],
+          ["clipDelegation", "clipDelegation", true],
+          ["frail", "frail", false],
+          ["blast", "blast", false],
+          ["fervor", "fervor", false],
+          ["magnetic", "magnetic", false],
+        ];
+        const ui = new Map();
+        let width = 0,
+          height = 0,
+          dpr = 1,
+          cells = [],
+          sideSize = null,
+          dirtyStatic = true,
+          dirtyStats = true,
+          frame = 0,
+          timer = 0,
+          lastTick = 0;
+        const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+        const numeric = (v, a, b, fallback) =>
+          Number.isFinite(Number(v)) && String(v).trim() !== ""
+            ? clamp(Number(v), a, b)
+            : fallback;
+        const fmt = (v, n = 1) =>
+          v.toLocaleString("en-US", {
+            maximumFractionDigits: n,
+            minimumFractionDigits: n,
+          });
+        const spreadBonus = (rank) => (rank < 0 ? 0 : (rank + 1) * 0.1);
+        const rankName = (rank) => (rank < 0 ? "Off" : `R${rank}`);
+        const radius = (angle, rank) =>
+          state.distance *
+          Math.tan((angle * (1 + spreadBonus(rank)) * Math.PI) / 180);
 
-      return built;
-    }
-
-    function generateShotGroup(panel) {
-      const expected = expectedPelletsPerShot(getRivenMsPercent());
-      const pellets = Math.min(pelletCountFromExpected(expected), panel.spokes);
-      const angles = Array.from(
-        { length: panel.spokes },
-        (_, i) => (Math.PI * 2 * i) / panel.spokes
-      );
-      const chosen = sampleUniqueIndices(pellets, panel.spokes);
-
-      const dots = [];
-      for (const idx of chosen) {
-        const a = angles[idx];
-        const r = panel.outerPx > 0 ? rand(0, panel.outerPx) : 0;
-        dots.push({
-          x: panel.cx + Math.cos(a) * r,
-          y: panel.cy + Math.sin(a) * r,
-        });
-      }
-      return dots;
-    }
-
-    function rebuildPanels() {
-      panels = buildPanelData();
-      for (const panel of panels) {
-        panel.shots = [];
-      }
-
-      const now = performance.now();
-      cycleStartTime = now;
-      lastFrameTime = now;
-      shotAccumulatorMs = 0;
-
-      draw();
-    }
-
-    function drawPanel(panel) {
-      const { cx, cy, panelW, panelH, innerPx, outerPx, spokes } = panel;
-
-      ctx.fillStyle = "#e7f6ff";
-      ctx.font = "700 24px Inter, Arial, sans-serif";
-      ctx.fillText(panel.label, cx - panelW / 2 + 18, cy - panelH / 2 + 32);
-
-      for (let i = 0; i < spokes; i++) {
-        const a = (Math.PI * 2 * i) / spokes;
-        const len = Math.min(panelW, panelH) * 0.42;
-        const x = cx + Math.cos(a) * len;
-        const y = cy + Math.sin(a) * len;
-
-        ctx.strokeStyle = "rgba(0,255,255,0.18)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = "rgba(0,255,255,0.45)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, innerPx, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(0,255,255,1)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(cx, cy, outerPx, 0, Math.PI * 2);
-      ctx.stroke();
-
-      const count = Math.min(panel.shots.length, MAX_VISIBLE_GROUPS);
-
-      for (let g = 0; g < count; g++) {
-        const reversedIndex = count - 1 - g;
-        const shot = panel.shots[reversedIndex];
-
-        let color = "rgba(140,20,20,0.82)";
-        if (g === 0) color = "rgba(57,255,20,0.95)";
-        else if (g === 1) color = "rgba(255,140,0,0.92)";
-
-        ctx.fillStyle = color;
-        for (const p of shot) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-          ctx.fill();
+        // Fit the full comparison into the viewport without changing its physical scale.
+        let fitFrame = 0;
+        function fitWorkspace() {
+          fitFrame = 0;
+          const viewport = window.visualViewport;
+          const availableWidth = viewport?.width || innerWidth,
+            availableHeight = viewport?.height || innerHeight;
+          const usableWidth = Math.max(1, availableWidth - VIEWPORT_INSET * 2),
+            usableHeight = Math.max(1, availableHeight - VIEWPORT_INSET * 2);
+          shell.style.width =
+            clamp(
+              availableWidth,
+              280 + weapons.length * 250,
+              MAX_LAYOUT_WIDTH,
+            ) + "px";
+          const previewHeight = ui.get(weapons[0].id).article.clientWidth - 4;
+          const enlargedHeight =
+            (clamp(availableHeight - 600, 240, 320) - 88) * 1.25 + 88;
+          const plotWidth = $("weapons").clientWidth - 2;
+          const plotHeight =
+            state.view === "ranks"
+              ? Math.min(enlargedHeight, Math.ceil(plotWidth / RANK_COUNT + 66))
+              : enlargedHeight;
+          shell.style.setProperty("--preview-height", previewHeight + "px");
+          shell.style.setProperty(
+            "--plot-height",
+            Math.round(plotHeight) + "px",
+          );
+          const naturalWidth = shell.offsetWidth,
+            naturalHeight = shell.offsetHeight;
+          const scale = Math.min(
+            1,
+            usableWidth / naturalWidth,
+            usableHeight / naturalHeight,
+          );
+          shell.style.transform = `scale(${scale})`;
+          shell.style.left =
+            (viewport?.offsetLeft || 0) +
+            (availableWidth - naturalWidth * scale) / 2 +
+            "px";
+          shell.style.top = (viewport?.offsetTop || 0) + VIEWPORT_INSET + "px";
+          shell.dataset.fitted = "";
         }
-      }
-
-      ctx.fillStyle = "rgba(180,108,255,1)";
-      ctx.beginPath();
-      ctx.arc(panel.droneX, panel.droneY, panel.dronePx, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawBackground() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const grad = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, 10,
-        canvas.width / 2, canvas.height / 2, canvas.width * 0.55
-      );
-      grad.addColorStop(0, "rgba(0,255,255,0.05)");
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function draw() {
-      drawBackground();
-      for (const panel of panels) drawPanel(panel);
-    }
-
-    function tick(now) {
-      if (!lastFrameTime) {
-        lastFrameTime = now;
-      }
-
-      let delta = now - lastFrameTime;
-      lastFrameTime = now;
-
-      // prevent giant catch-up bursts after tab switches / hiccups
-      if (delta > 50) {
-        delta = 50;
-      }
-
-      if (now - cycleStartTime >= CYCLE_RESET_MS) {
-        for (const panel of panels) {
-          panel.shots.length = 0;
+        function queueWorkspaceFit() {
+          if (!fitFrame) fitFrame = requestAnimationFrame(fitWorkspace);
         }
-        cycleStartTime = now;
-        shotAccumulatorMs = 0;
-      }
 
-      shotAccumulatorMs += delta;
-
-      const shotIntervalMs = getShotIntervalMs();
-
-      while (shotAccumulatorMs >= shotIntervalMs) {
-        for (const panel of panels) {
-          panel.shots.push(generateShotGroup(panel));
-          if (panel.shots.length > STORED_GROUPS) {
-            panel.shots.shift();
+        // Weapon calculations and Riven ranges.
+        function updateModels() {
+          const mods = 1 + (state.galv ? 2.3 : 0) + (state.vigilante ? 0.6 : 0);
+          const hasteBonus = state.mote * 1.5;
+          const fireMods =
+            state.barrage +
+            (state.frail ? 90 : 0) +
+            (state.blast ? 60 : 0) +
+            (state.fervor ? 45 : 0) +
+            (state.magnetic ? 40 : 0);
+          for (const w of weapons) {
+            const base =
+              w.pellets + (w.barrel ?? 0) * (w.pelletsPerBarrelStack ?? 0);
+            const clipBonus =
+              state.clipDelegation && w.supportsClipDelegation ? 2.25 : 0;
+            const pellets =
+                base *
+                (mods +
+                  (w.overcharge ? 3.5 : 0) +
+                  clipBonus +
+                  (w.rivenMS ? w.riven / 100 : 0)),
+              spokes = Math.max(1, Math.ceil(pellets));
+            if (w.model?.spokes !== spokes) dirtyStatic = true;
+            const fireRate =
+              w.baseRate *
+              Math.max(
+                0,
+                1 +
+                  (hasteBonus + fireMods + (w.rivenFR ? w.rivenRate : 0)) / 100,
+              );
+            w.model = {
+              pellets,
+              spokes,
+              halfAngle: w.angle * (1 + spreadBonus(w.rank)),
+              radius: radius(w.angle, w.rank),
+              fireRate,
+              pelletsPerSecond: pellets * fireRate,
+            };
+          }
+          $("moteBonus").textContent = `+${fmt(hasteBonus, 0)}% fire rate`;
+          $("fireModsBonus").textContent =
+            `${fireMods >= 0 ? "+" : ""}${fmt(fireMods, 0)}%`;
+        }
+        function rivenRange(w, stat, format) {
+          const mean =
+            RIVEN_BASE_VALUES[stat] *
+            w.disposition *
+            RIVEN_FORMAT_FACTORS[format];
+          const round = (v) => Math.floor(v * 10 + 0.5 + 1e-8) / 10;
+          return { low: round(mean * 0.9), high: round(mean * 1.1) };
+        }
+        function syncRivenControls(w) {
+          const refs = ui.get(w.id);
+          for (const b of refs.rivenFormat.children)
+            b.setAttribute(
+              "aria-pressed",
+              String(b.dataset.format === w.rivenFormat),
+            );
+          for (const { field, stat } of RIVEN_FIELDS) {
+            const r = rivenRange(w, stat, w.rivenFormat);
+            for (const el of [refs[field], refs[field + "Slider"]]) {
+              el.min = r.low;
+              el.max = r.high;
+              el.value = w[field];
+            }
+            refs[field + "Low"].textContent = fmt(r.low) + "%";
+            refs[field + "High"].textContent = fmt(r.high) + "%";
           }
         }
-        shotAccumulatorMs -= shotIntervalMs;
-      }
+        function targetFor(w, rank = w.rank) {
+          const rand = randomFor(state.targetSeed + w.index * 197),
+            angle = rand() * TAU;
+          const outer = radius(w.angle, rank),
+            distance = Math.min(
+              Math.max(0, outer - DRONE_RADIUS_M),
+              outer * (0.78 + rand() * 0.14),
+            );
+          return {
+            x: Math.cos(angle) * distance,
+            y: Math.sin(angle) * distance,
+            radius: DRONE_RADIUS_M,
+          };
+        }
 
-      draw();
-      requestAnimationFrame(tick);
-    }
+        // Seeded samples keep weapon and rank comparisons reproducible.
+        function randomFor(shot) {
+          let s = (state.seed ^ Math.imul(shot + 1, 0x9e3779b9)) >>> 0;
+          return () => {
+            s = (s + 0x6d2b79f5) >>> 0;
+            let t = s;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+        function makeShot(w, shot) {
+          const rand = randomFor(shot),
+            expected = w.model.pellets;
+          const count =
+            Math.floor(expected) +
+            (rand() < expected - Math.floor(expected) ? 1 : 0);
+          const points = new Float32Array(count * 2);
+          const spokes = w.model.spokes;
+          const indices = new Uint16Array(spokes);
+          for (let i = 0; i < spokes; i++) indices[i] = i;
+          for (let i = spokes - 1; i > 0; i--) {
+            const j = Math.floor(rand() * (i + 1));
+            const old = indices[i];
+            indices[i] = indices[j];
+            indices[j] = old;
+          }
+          for (let i = 0; i < count; i++) {
+            const a = (indices[i] * TAU) / spokes,
+              r = rand();
+            points[i * 2] = Math.cos(a) * r;
+            points[i * 2 + 1] = Math.sin(a) * r;
+          }
+          return points;
+        }
+        function regenerate() {
+          for (const w of weapons) {
+            w.shots.length = 0;
+            for (
+              let i = Math.max(0, w.shotCount - state.history);
+              i < w.shotCount;
+              i++
+            )
+              w.shots.push(makeShot(w, i));
+          }
+          dirtyStats = true;
+        }
+        function emitShot(w) {
+          w.shots.push(makeShot(w, w.shotCount++));
+          if (w.shots.length > state.history) w.shots.shift();
+        }
+        function fire() {
+          for (const w of weapons) emitShot(w);
+          dirtyStats = true;
+          requestPaint();
+        }
+        function requestPaint(staticChanged = false) {
+          dirtyStatic ||= staticChanged;
+          if (!frame) frame = requestAnimationFrame(paint);
+        }
+        function schedule() {
+          clearTimeout(timer);
+          timer = 0;
+          if (!state.playing || document.hidden) return;
+          lastTick = performance.now();
+          timer = setTimeout(playbackTick, PLAYBACK_INTERVAL_MS);
+        }
+        function playbackTick() {
+          timer = 0;
+          if (!state.playing || document.hidden) return;
+          const now = performance.now(),
+            elapsed = Math.min(0.2, (now - lastTick) / 1000);
+          lastTick = now;
+          let changed = false;
+          for (const w of weapons) {
+            if (!w.enabled && !(state.view === "ranks" && w.id === state.sweep))
+              continue;
+            w.accumulator += elapsed * w.model.fireRate;
+            const count = Math.floor(w.accumulator);
+            w.accumulator -= count;
+            for (let i = 0; i < count; i++) emitShot(w);
+            changed ||= count > 0;
+          }
+          if (changed) {
+            dirtyStats = true;
+            requestPaint();
+          }
+          timer = setTimeout(playbackTick, PLAYBACK_INTERVAL_MS);
+        }
+        function setPlaying(value) {
+          state.playing = value;
+          $("play").textContent = value ? "Ⅱ Pause" : "▶ Play";
+          $("play").setAttribute("aria-pressed", String(value));
+          schedule();
+        }
+        function configure({ samples = false, geometry = true } = {}) {
+          syncSwitches();
+          updateModels();
+          if (samples) regenerate();
+          dirtyStats = true;
+          schedule();
+          requestPaint(geometry);
+        }
 
-    function setWeaponMode(newMode) {
-      if (newMode === weaponMode) return;
-      storeCurrentWeaponValue();
-      weaponMode = newMode;
-      syncWeaponUI();
-      applyWeaponRange(true);
-    }
+        // Weapon markup and control bindings.
+        function weaponMarkup(w) {
+          const formatButtons = Object.keys(RIVEN_FORMAT_FACTORS)
+            .map(
+              (format) => `
+                <button type="button" data-format="${format}"
+                  aria-pressed="${format === w.rivenFormat}">${format}</button>`,
+            )
+            .join("");
+          const rivenControls = RIVEN_FIELDS.map(
+            ({ field, label }) => `
+              <div class="riven-control">
+                <div class="weapon-row">
+                  <label class="switch-row riven-switch">
+                    <input id="${w.id}-${field}Enabled" data-field="${field}Enabled"
+                      type="checkbox" checked aria-label="${w.name} ${label}">
+                    <span>${label}</span>
+                  </label>
+                  <span>
+                    <input id="${w.id}-${field}" data-field="${field}"
+                      type="number" step="0.1"
+                      aria-label="${w.name} ${label.toLowerCase()} percentage"> %
+                  </span>
+                </div>
+                <input id="${w.id}-${field}Slider" data-field="${field}Slider"
+                  type="range" step="0.1"
+                  aria-label="${w.name} ${label.toLowerCase()} percentage">
+                <div class="end-labels">
+                  <span data-field="${field}Low"></span>
+                  <span data-field="${field}High"></span>
+                </div>
+              </div>`,
+          ).join("");
+          const barrelControl = Number.isFinite(w.barrel)
+            ? `
+              <div class="barrel-control">
+                <label for="${w.id}-barrel">Blazing Barrel stacks</label>
+                <select id="${w.id}-barrel" data-field="barrel">
+                  ${Array.from({ length: 6 }, (_, i) => `<option${i === w.barrel ? " selected" : ""}>${i}</option>`).join("")}
+                </select>
+              </div>`
+            : "";
+          const rankButtons = Array.from({ length: RANK_COUNT }, (_, i) => {
+            const rank = i - 1;
+            return `
+              <button type="button" data-rank="${rank}"
+                aria-pressed="${rank === w.rank}"
+                aria-label="${w.name} Vicious Spread ${rankName(rank)}">${rankName(rank)}</button>`;
+          }).join("");
+          return `
+            <div class="weapon-header" title="${w.mode || "Normal fire"}">
+              <label class="weapon-title">
+                <input type="checkbox" checked data-field="enabled">
+                <span>${w.name}</span>
+              </label>
+              <p class="weapon-sub">
+                <span><strong data-stat="diameter"></strong> wide at <span data-stat="distance"></span></span>
+                <span>Radial Lines: <strong data-stat="spokes"></strong></span>
+              </p>
+            </div>
+            <div class="weapon-plot">
+              <canvas data-field="preview" role="img"
+                aria-label="${w.name} spread at the shared scale"></canvas>
+            </div>
+            <div class="weapon-body">
+              <div class="statline">
+                <div>
+                  <div class="stat-number" data-stat="pellets"></div>
+                  <div class="stat-name">Pellets / shot</div>
+                </div>
+                <div>
+                  <div class="stat-number" data-stat="pps"></div>
+                  <div class="stat-name">Pellets / sec</div>
+                </div>
+                <div>
+                  <div class="stat-number" data-stat="fireRate"></div>
+                  <div class="stat-name">Shots / sec</div>
+                </div>
+                <div>
+                  <div class="stat-number" data-stat="spread"></div>
+                  <div class="stat-name">Max spread</div>
+                </div>
+              </div>
+              <label class="switch-row weapon-overcharge">
+                <input id="${w.id}-overcharge" data-field="overcharge"
+                  type="checkbox" checked aria-label="${w.name} Primary Overcharge">
+                <span class="switch-copy">Primary Overcharge <small>+350%</small></span>
+              </label>
+              <div class="riven-heading">
+                <span>Disposition ${fmt(w.disposition, 2)}</span>
+                <div class="segmented riven-format" data-field="rivenFormat"
+                  role="group" aria-label="${w.name} Riven roll type">${formatButtons}
+                </div>
+              </div>
+              ${rivenControls}
+              <div class="weapon-rank">
+                <div class="weapon-rank-heading">
+                  <span>Vicious Spread</span>
+                  ${barrelControl}
+                </div>
+                <div class="rank-buttons" data-field="ranks" role="group"
+                  aria-label="${w.name} Vicious Spread rank">${rankButtons}
+                </div>
+              </div>
+            </div>`;
+        }
+        function createControls() {
+          for (const w of weapons) {
+            const article = document.createElement("article");
+            article.className = "weapon";
+            article.style.setProperty("--weapon", w.color);
+            article.dataset.weapon = w.id;
+            article.innerHTML = weaponMarkup(w);
+            $("weapons").append(article);
+            const find = (name) =>
+              article.querySelector(`[data-field="${name}"]`);
+            const preview = find("preview");
+            const refs = {
+              article,
+              preview,
+              previewCtx: preview.getContext("2d", { alpha: false }),
+              enabled: find("enabled"),
+              overcharge: find("overcharge"),
+              ranks: find("ranks"),
+              rivenFormat: find("rivenFormat"),
+              barrel: find("barrel"),
+            };
+            for (const { field } of RIVEN_FIELDS)
+              for (const suffix of ["", "Slider", "Low", "High", "Enabled"])
+                refs[field + suffix] = find(field + suffix);
+            for (const name of [
+              "pellets",
+              "pps",
+              "fireRate",
+              "spread",
+              "spokes",
+              "diameter",
+              "distance",
+            ])
+              refs[name] = article.querySelector(`[data-stat="${name}"]`);
+            ui.set(w.id, refs);
+            syncRivenControls(w);
+            refs.enabled.addEventListener("change", () => {
+              w.enabled = refs.enabled.checked;
+              article.classList.toggle("off", !w.enabled);
+              configure();
+            });
+            refs.overcharge.addEventListener("change", () => {
+              w.overcharge = refs.overcharge.checked;
+              configure({ samples: true, geometry: false });
+            });
+            refs.ranks.addEventListener("click", (event) => {
+              const b = event.target.closest("[data-rank]");
+              if (!b) return;
+              w.rank = Number(b.dataset.rank);
+              for (const el of refs.ranks.children)
+                el.setAttribute("aria-pressed", String(el === b));
+              configure();
+            });
+            refs.rivenFormat.addEventListener("click", (event) => {
+              const b = event.target.closest("[data-format]");
+              if (!b || b.dataset.format === w.rivenFormat) return;
+              for (const { field, stat } of RIVEN_FIELDS) {
+                const before = rivenRange(w, stat, w.rivenFormat),
+                  after = rivenRange(w, stat, b.dataset.format);
+                const fraction = clamp(
+                  (w[field] - before.low) / (before.high - before.low),
+                  0,
+                  1,
+                );
+                w[field] =
+                  Math.round(
+                    (after.low + fraction * (after.high - after.low)) * 10,
+                  ) / 10;
+              }
+              w.rivenFormat = b.dataset.format;
+              syncRivenControls(w);
+              configure({ samples: true, geometry: false });
+            });
+            for (const { field, stat, flag, resample } of RIVEN_FIELDS) {
+              refs[field + "Enabled"].addEventListener("change", () => {
+                w[flag] = refs[field + "Enabled"].checked;
+                configure({ samples: resample, geometry: false });
+              });
+              const number = refs[field],
+                slider = refs[field + "Slider"];
+              const update = (el, commit) => {
+                const r = rivenRange(w, stat, w.rivenFormat);
+                w[field] = clamp(
+                  Math.round(numeric(el.value, r.low, r.high, w[field]) * 10) /
+                    10,
+                  r.low,
+                  r.high,
+                );
+                slider.value = w[field];
+                if (el !== number || commit) number.value = w[field];
+                configure({ samples: resample, geometry: false });
+              };
+              for (const el of [number, slider]) {
+                el.addEventListener("input", () => update(el, false));
+                el.addEventListener("change", () => update(el, true));
+              }
+            }
+            if (refs.barrel)
+              refs.barrel.addEventListener("change", () => {
+                w.barrel = Number(refs.barrel.value);
+                configure({ samples: true, geometry: false });
+              });
+            const o = document.createElement("option");
+            o.value = w.id;
+            o.textContent = w.name;
+            o.style.color = w.color;
+            o.style.backgroundColor = "#1b2022";
+            $("sweepWeapon").append(o);
+          }
+          $("sweepWeapon").value = state.sweep;
+        }
+        function bindPair(id, prop, min, max, step) {
+          const slider = $(id),
+            number = $(id + "Number");
+          const update = (el, commit) => {
+            let v = numeric(el.value, min, max, state[prop]);
+            v = Math.round(v / step) * step;
+            state[prop] = v;
+            slider.value = String(v);
+            if (el !== number || commit) number.value = String(v);
+            configure();
+          };
+          slider.addEventListener("input", () => update(slider, true));
+          number.addEventListener("input", () => update(number, false));
+          number.addEventListener("change", () => update(number, true));
+        }
+        function syncSwitches() {
+          const checked = (el, value) => {
+            if (el.checked !== value) el.checked = value;
+          };
+          for (const [id, key] of SHARED_SWITCHES) checked($(id), state[key]);
+          checked($("barrage"), state.barrage === 90);
+          checked($("amalgamBarrage"), state.barrage === 85);
+          for (const w of weapons) {
+            const el = ui.get(w.id);
+            if (el) {
+              checked(el.enabled, w.enabled);
+              checked(el.overcharge, w.overcharge);
+              checked(el.rivenEnabled, w.rivenMS);
+              checked(el.rivenRateEnabled, w.rivenFR);
+            }
+          }
+        }
+        function syncViewControls() {
+          for (const b of $("viewMode").querySelectorAll("button[data-view]"))
+            b.setAttribute(
+              "aria-pressed",
+              String(b.dataset.view === state.view),
+            );
+          for (const b of $("projection").querySelectorAll(
+            "button[data-projection]",
+          ))
+            b.setAttribute(
+              "aria-pressed",
+              String(b.dataset.projection === state.projection),
+            );
+          document.querySelector(".workspace").dataset.view = state.view;
+          document.querySelector(".layout").dataset.view = state.view;
+          $("sweepWeapon").hidden = state.view !== "ranks";
+          $("sweepWeapon").value = state.sweep;
+          $("sweepWeapon").style.color = weapons.find(
+            (w) => w.id === state.sweep,
+          ).color;
+        }
+        function syncControlsFromState() {
+          syncSwitches();
+          syncViewControls();
+          for (const id of ["distance", "mote"]) {
+            $(id).value = state[id];
+            $(id + "Number").value = state[id];
+          }
+          $("history").value = state.history;
+          $("historyValue").textContent = state.history;
+          for (const w of weapons) {
+            const el = ui.get(w.id);
+            syncRivenControls(w);
+            el.article.classList.toggle("off", !w.enabled);
+            for (const b of el.ranks.children)
+              b.setAttribute(
+                "aria-pressed",
+                String(Number(b.dataset.rank) === w.rank),
+              );
+            if (el.barrel) el.barrel.value = w.barrel;
+          }
+          setPlaying(state.playing);
+        }
+        function getActive() {
+          return weapons.filter((w) => w.enabled);
+        }
 
-    labelKuva.addEventListener("click", () => {
-      setWeaponMode("kuva");
-    });
+        // Plot geometry uses unscaled layout pixels; viewport fitting is applied separately.
+        function sideLayout() {
+          const preview = ui.get(weapons[0].id).preview;
+          const cols = getComputedStyle($("weapons")).gridTemplateColumns.split(
+            " ",
+          ).length;
+          const cw = Math.max(1, preview.clientWidth),
+            ch = Math.max(1, preview.clientHeight);
+          return {
+            cols,
+            cw,
+            ch,
+            width: cw * cols,
+            height: ch * Math.ceil(weapons.length / cols),
+          };
+        }
+        function plotLayout() {
+          const cols = state.view === "overlay" ? 1 : RANK_COUNT;
+          const plotHeight =
+            parseFloat(shell.style.getPropertyValue("--plot-height")) || 200;
+          return { cols, height: Math.round(plotHeight) };
+        }
+        function plotCells() {
+          const active = getActive();
+          if (state.view === "side") {
+            const { cols, cw, ch } = sideSize;
+            return weapons.flatMap((w, i) =>
+              w.enabled
+                ? [
+                    {
+                      x: (i % cols) * cw,
+                      y: Math.floor(i / cols) * ch,
+                      w: cw,
+                      h: ch,
+                      weapons: [w],
+                      rank: w.rank,
+                      embedded: true,
+                    },
+                  ]
+                : [],
+            );
+          }
+          if (state.view === "overlay")
+            return active.length
+              ? [
+                  {
+                    x: 0,
+                    y: 0,
+                    w: width,
+                    h: height,
+                    weapons: active,
+                    overlay: true,
+                  },
+                ]
+              : [];
+          const w = weapons.find((w) => w.id === state.sweep);
+          const { cols } = plotLayout(),
+            cw = width / cols;
+          return Array.from({ length: RANK_COUNT }, (_, i) => ({
+            x: i * cw,
+            y: 0,
+            w: cw,
+            h: height,
+            weapons: [w],
+            rank: i - 1,
+          }));
+        }
+        function decorateCells() {
+          const relevant =
+            state.view === "ranks"
+              ? [weapons.find((w) => w.id === state.sweep)]
+              : getActive();
+          const maxRadius = Math.max(
+            DRONE_RADIUS_M,
+            ...relevant.map((w) =>
+              radius(w.angle, state.view === "ranks" ? 5 : w.rank),
+            ),
+          );
+          for (const c of cells) {
+            c.top = c.embedded ? 0 : 48;
+            c.bottom = c.embedded ? 0 : 20;
+            if (state.projection === "impact") {
+              c.cx = c.x + c.w / 2;
+              c.cy = c.y + c.top + (c.h - c.top - c.bottom) / 2;
+              c.extent = Math.max(
+                1,
+                Math.min(c.w - 24, c.h - c.top - c.bottom - 20) / 2,
+              );
+              c.scale = c.extent / maxRadius;
+            } else {
+              const availableW = Math.max(1, c.w - (c.embedded ? 40 : 70)),
+                availableH = Math.max(1, c.h - c.top - c.bottom - 30);
+              c.scale = Math.min(
+                availableW / state.distance,
+                availableH / (maxRadius * 2),
+              );
+              const len = state.distance * c.scale;
+              c.ox = c.x + (c.w - len) / 2;
+              c.oy = c.y + c.top + (c.h - c.top - c.bottom) / 2;
+            }
+          }
+          $("plotScale").textContent =
+            state.projection === "impact"
+              ? `Shared scale · ±${fmt(maxRadius)} m`
+              : `Shared scale · ${fmt(state.distance, 0)} m to target`;
+        }
+        function text(
+          context,
+          str,
+          x,
+          y,
+          color = "#a0aca7",
+          size = 11,
+          weight = 400,
+        ) {
+          context.fillStyle = color;
+          context.font = `${weight} ${size}px system-ui,sans-serif`;
+          context.fillText(str, x, y);
+        }
+        function circle(context, x, y, r, color, dash = [], fill = false) {
+          context.beginPath();
+          context.arc(x, y, Math.max(0, r), 0, TAU);
+          context.strokeStyle = color;
+          context.setLineDash(dash);
+          context.lineWidth = 1;
+          if (fill) {
+            context.fillStyle = color;
+            context.fill();
+          } else context.stroke();
+          context.setLineDash([]);
+        }
+        function drawTarget(context, c) {
+          const tr = DRONE_RADIUS_M * c.scale;
+          for (const w of c.weapons) {
+            const target = targetFor(w, c.overlay ? w.rank : c.rank);
+            if (state.projection === "impact") {
+              const x = c.cx + target.x * c.scale,
+                y = c.cy + target.y * c.scale;
+              context.fillStyle = w.color + "22";
+              context.beginPath();
+              context.arc(x, y, tr, 0, TAU);
+              context.fill();
+              circle(context, x, y, tr, "#ecf0e9");
+              circle(
+                context,
+                x,
+                y,
+                Math.max(1.5, tr * 0.22),
+                w.color,
+                [],
+                true,
+              );
+              if (tr < 4) {
+                context.strokeStyle = w.color;
+                context.setLineDash([2, 3]);
+                context.strokeRect(x - 4, y - 4, 8, 8);
+                context.setLineDash([]);
+              }
+            } else {
+              const x = c.ox + state.distance * c.scale,
+                y = c.oy - target.x * c.scale;
+              context.strokeStyle = w.color;
+              context.lineWidth = 3;
+              context.beginPath();
+              context.moveTo(x, y - tr);
+              context.lineTo(x, y + tr);
+              context.stroke();
+              context.lineWidth = 1;
+            }
+          }
+        }
 
-    labelNormal.addEventListener("click", () => {
-      setWeaponMode("normal");
-    });
+        // Cache the grid and guides; playback redraws only pellets and targets.
+        function staticPaint() {
+          bg.setTransform(dpr, 0, 0, dpr, 0, 0);
+          bg.fillStyle = "#121719";
+          bg.fillRect(0, 0, width, height);
+          cells = plotCells();
+          decorateCells();
+          $("empty").hidden = !!cells.length;
+          for (const c of cells) {
+            c.baselinePaths = [];
+            bg.save();
+            bg.beginPath();
+            bg.rect(c.x + 0.5, c.y + 0.5, c.w - 1, c.h - 1);
+            bg.clip();
+            if (!c.embedded) {
+              bg.strokeStyle = "#273130";
+              bg.lineWidth = 1;
+              bg.strokeRect(c.x + 0.5, c.y + 0.5, c.w - 1, c.h - 1);
+            }
+            if (c.overlay) {
+              text(
+                bg,
+                "WEAPON OVERLAY",
+                c.x + 18,
+                c.y + 25,
+                "#c6d1c8",
+                10,
+                600,
+              );
+              text(
+                bg,
+                `${c.weapons.length} weapons · ${state.distance} m`,
+                c.x + 18,
+                c.y + 43,
+                "#7c8c83",
+                10,
+              );
+            } else if (!c.embedded) {
+              const w = c.weapons[0];
+              text(
+                bg,
+                `${rankName(c.rank)}${c.rank < 0 ? " · no mod" : ` · +${Math.round(spreadBonus(c.rank) * 100)}%`}`,
+                c.x + 17,
+                c.y + 24,
+                w.color,
+                12,
+                550,
+              );
+              const rad = radius(w.angle, c.rank);
+              text(
+                bg,
+                `${fmt(w.angle * (1 + spreadBonus(c.rank)))}° max · Ø ${fmt(rad * 2)} m`,
+                c.x + 17,
+                c.y + 41,
+                "#a1afa5",
+                10,
+              );
+            }
+            if (state.projection === "impact") {
+              const extent = c.extent;
+              bg.strokeStyle = "#28332f";
+              bg.beginPath();
+              bg.moveTo(c.cx - extent - 5, c.cy);
+              bg.lineTo(c.cx + extent + 5, c.cy);
+              bg.moveTo(c.cx, c.cy - extent - 5);
+              bg.lineTo(c.cx, c.cy + extent + 5);
+              bg.stroke();
+              for (const f of [0.25, 0.5, 0.75, 1])
+                circle(bg, c.cx, c.cy, extent * f, "#25312b", [2, 5]);
+              for (const w of c.weapons) {
+                const rank = c.overlay ? w.rank : c.rank,
+                  r = radius(w.angle, rank) * c.scale;
+                circle(bg, c.cx, c.cy, r, w.color + "12", [], true);
+                const guides = new Path2D(),
+                  length = Math.max(r, extent) * 1.02;
+                for (let i = 0; i < w.model.spokes; i++) {
+                  const a = (i * TAU) / w.model.spokes;
+                  guides.moveTo(c.cx, c.cy);
+                  guides.lineTo(
+                    c.cx + Math.cos(a) * length,
+                    c.cy + Math.sin(a) * length,
+                  );
+                }
+                bg.strokeStyle = w.color + (c.overlay ? "26" : "40");
+                bg.lineWidth = 1;
+                bg.stroke(guides);
+                const baseline = new Path2D();
+                baseline.arc(c.cx, c.cy, radius(w.angle, -1) * c.scale, 0, TAU);
+                c.baselinePaths.push({ path: baseline, color: w.color });
+                circle(bg, c.cx, c.cy, r, w.color + "cc");
+              }
+            } else {
+              const len = state.distance * c.scale;
+              bg.strokeStyle = "#34433a";
+              bg.setLineDash([3, 5]);
+              bg.beginPath();
+              bg.moveTo(c.ox, c.oy);
+              bg.lineTo(c.ox + len, c.oy);
+              bg.stroke();
+              bg.setLineDash([]);
+              for (const w of c.weapons) {
+                const rank = c.overlay ? w.rank : c.rank,
+                  r = radius(w.angle, rank) * c.scale,
+                  base = radius(w.angle, -1) * c.scale;
+                bg.beginPath();
+                bg.moveTo(c.ox, c.oy);
+                bg.lineTo(c.ox + len, c.oy - r);
+                bg.lineTo(c.ox + len, c.oy + r);
+                bg.closePath();
+                bg.fillStyle = w.color + "0a";
+                bg.fill();
+                bg.strokeStyle = w.color + "bb";
+                bg.stroke();
+                const baseline = new Path2D();
+                baseline.moveTo(c.ox + len, c.oy - base);
+                baseline.lineTo(c.ox, c.oy);
+                baseline.lineTo(c.ox + len, c.oy + base);
+                c.baselinePaths.push({ path: baseline, color: w.color });
+              }
+              circle(bg, c.ox, c.oy, 2.5, "#c7d4c5", [], true);
+              text(bg, "muzzle", c.ox - 12, c.y + c.h - 12, "#6f8076", 9);
+              text(
+                bg,
+                `${state.distance} m`,
+                c.ox + len - 15,
+                c.y + c.h - 12,
+                "#8c9a90",
+                9,
+              );
+            }
+            bg.restore();
+          }
+          dirtyStatic = false;
+        }
+        function drawDots(c, w) {
+          const rank = c.overlay ? w.rank : c.rank,
+            r = radius(w.angle, rank) * c.scale;
+          const latest = w.shots.length - 1,
+            paths = [new Path2D(), new Path2D(), new Path2D()];
+          for (let s = 0; s < w.shots.length; s++) {
+            const a = w.shots[s],
+              age = latest - s,
+              path = paths[age === 0 ? 2 : age <= 2 ? 1 : 0],
+              size = age === 0 ? 2 : 1.45;
+            for (let i = 0; i < a.length; i += 2) {
+              let x, y;
+              if (state.projection === "impact") {
+                x = c.cx + a[i] * r;
+                y = c.cy + a[i + 1] * r;
+              } else {
+                x = c.ox + state.distance * c.scale;
+                y = c.oy - a[i] * r;
+              }
+              path.moveTo(x + size, y);
+              path.arc(x, y, size, 0, TAU);
+            }
+          }
+          ctx.fillStyle = w.color;
+          for (let i = 0; i < 3; i++) {
+            ctx.globalAlpha = [0.19, 0.44, 0.95][i];
+            ctx.fill(paths[i]);
+          }
+          ctx.globalAlpha = 1;
+        }
+        function drawBaselines(c) {
+          ctx.setLineDash([6, 4]);
+          for (const baseline of c.baselinePaths) {
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "#121719";
+            ctx.stroke(baseline.path);
+            ctx.lineWidth = 1.8;
+            ctx.strokeStyle = baseline.color;
+            ctx.stroke(baseline.path);
+          }
+          ctx.setLineDash([]);
+          ctx.lineWidth = 1;
+        }
+        function updateStats() {
+          syncSwitches();
+          for (const w of weapons) {
+            const el = ui.get(w.id);
+            el.pellets.textContent = fmt(w.model.pellets, 1);
+            el.pps.textContent = fmt(w.model.pelletsPerSecond, 1);
+            el.fireRate.textContent = fmt(w.model.fireRate, 2);
+            el.fireRate.title = "Calculated burst fire rate";
+            el.spread.textContent = fmt(w.model.halfAngle, 1) + "°";
+            el.diameter.textContent = fmt(w.model.radius * 2, 1) + " m";
+            el.spokes.textContent = fmt(w.model.spokes, 0);
+            el.distance.textContent = fmt(state.distance, 0) + " m";
+            for (const { field, flag } of RIVEN_FIELDS)
+              el[field].disabled = el[field + "Slider"].disabled = !w[flag];
+            for (const b of el.rivenFormat.children)
+              b.disabled = !w.rivenMS && !w.rivenFR;
+          }
+          dirtyStats = false;
+        }
+        function paint() {
+          frame = 0;
+          let nextWidth, nextHeight;
+          if (state.view === "side") {
+            sideSize = sideLayout();
+            nextWidth = sideSize.width;
+            nextHeight = sideSize.height;
+          } else {
+            const wrap = $("canvasWrap"),
+              wantedHeight = plotLayout().height;
+            if (wrap.offsetHeight !== wantedHeight)
+              wrap.style.height = wantedHeight + "px";
+            nextWidth = Math.max(1, wrap.clientWidth);
+            nextHeight = Math.max(1, wrap.clientHeight);
+          }
+          const nextDpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+          if (width !== nextWidth || height !== nextHeight || dpr !== nextDpr) {
+            width = nextWidth;
+            height = nextHeight;
+            dpr = nextDpr;
+            canvas.width = background.width = Math.round(width * dpr);
+            canvas.height = background.height = Math.round(height * dpr);
+            dirtyStatic = true;
+          }
+          if (dirtyStatic) staticPaint();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.drawImage(background, 0, 0);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          for (const c of cells) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(
+              c.x + 3,
+              c.y + c.top,
+              c.w - 6,
+              Math.max(1, c.h - c.top - c.bottom),
+            );
+            ctx.clip();
+            for (const w of c.weapons) drawDots(c, w);
+            drawBaselines(c);
+            drawTarget(ctx, c);
+            ctx.restore();
+          }
+          if (state.view === "side") {
+            const { cols, cw, ch } = sideSize,
+              pw = Math.round(cw * dpr),
+              ph = Math.round(ch * dpr);
+            for (const w of weapons) {
+              const el = ui.get(w.id),
+                sx = (w.index % cols) * cw * dpr,
+                sy = Math.floor(w.index / cols) * ch * dpr;
+              if (el.preview.width !== pw || el.preview.height !== ph) {
+                el.preview.width = pw;
+                el.preview.height = ph;
+              }
+              el.previewCtx.drawImage(
+                canvas,
+                sx,
+                sy,
+                cw * dpr,
+                ch * dpr,
+                0,
+                0,
+                pw,
+                ph,
+              );
+            }
+          }
+          if (dirtyStats) updateStats();
+        }
+        // Shared controls and page lifecycle.
+        function bindEvents() {
+          bindPair("distance", "distance", 1, 100, 1);
+          bindPair("mote", "mote", 100, 1000, 1);
+          $("moveDrones").addEventListener("click", () => {
+            state.targetSeed += 883;
+            dirtyStats = true;
+            requestPaint(true);
+          });
+          for (const [id, key, samples] of SHARED_SWITCHES)
+            $(id).addEventListener("change", () => {
+              state[key] = $(id).checked;
+              configure({ samples, geometry: false });
+            });
+          for (const [id, other, value] of [
+            ["barrage", "amalgamBarrage", 90],
+            ["amalgamBarrage", "barrage", 85],
+          ])
+            $(id).addEventListener("change", () => {
+              state.barrage = $(id).checked ? value : 0;
+              if ($(id).checked) $(other).checked = false;
+              configure({ geometry: false });
+            });
+          $("history").addEventListener("input", () => {
+            state.history = Number($("history").value);
+            $("historyValue").textContent = String(state.history);
+            regenerate();
+            requestPaint();
+          });
+          $("play").addEventListener("click", () => setPlaying(!state.playing));
+          $("singleShot").addEventListener("click", fire);
+          $("reset").addEventListener("click", () => {
+            state.seed = (state.seed + 7919) >>> 0;
+            for (const w of weapons) {
+              w.shotCount = 1;
+              w.accumulator = 0;
+            }
+            regenerate();
+            requestPaint(true);
+            schedule();
+          });
+          $("restore").addEventListener("click", () => location.reload());
+          $("viewMode").addEventListener("click", (event) => {
+            const b = event.target.closest("button[data-view]");
+            if (!b) return;
+            state.view = b.dataset.view;
+            syncViewControls();
+            fitWorkspace();
+            requestPaint(true);
+          });
+          $("projection").addEventListener("click", (event) => {
+            const b = event.target.closest("[data-projection]");
+            if (!b) return;
+            state.projection = b.dataset.projection;
+            for (const el of $("projection").children)
+              el.setAttribute("aria-pressed", String(el === b));
+            requestPaint(true);
+          });
+          $("sweepWeapon").addEventListener("change", () => {
+            state.sweep = $("sweepWeapon").value;
+            syncViewControls();
+            requestPaint(true);
+          });
+          document.addEventListener("visibilitychange", schedule);
+          document.addEventListener("keydown", (event) => {
+            if (
+              event.code === "Space" &&
+              !/INPUT|SELECT|BUTTON|SUMMARY|TEXTAREA/.test(event.target.tagName)
+            ) {
+              event.preventDefault();
+              fire();
+            }
+          });
+          const resizeObserver = new ResizeObserver(() => requestPaint(true));
+          resizeObserver.observe($("canvasWrap"));
+          resizeObserver.observe($("weapons"));
+          const fitObserver = new ResizeObserver(queueWorkspaceFit);
+          fitObserver.observe(shell);
+          const onViewportResize = () => {
+            fitWorkspace();
+            requestPaint(true);
+          };
+          window.addEventListener("resize", onViewportResize);
+          window.visualViewport?.addEventListener("resize", onViewportResize);
+          window.addEventListener("pagehide", () => {
+            clearTimeout(timer);
+            if (frame) cancelAnimationFrame(frame);
+            if (fitFrame) cancelAnimationFrame(fitFrame);
+          });
+          window.addEventListener("pageshow", (event) => {
+            if (event.persisted) {
+              frame = 0;
+              fitFrame = 0;
+            }
+            syncControlsFromState();
+            requestAnimationFrame(() => {
+              syncControlsFromState();
+              fitWorkspace();
+              dirtyStats = true;
+              requestPaint(true);
+            });
+          });
+          // Browser form restoration must not override the calculator's current flags.
+          for (const el of document.querySelectorAll("input,select"))
+            el.setAttribute("autocomplete", "off");
+          for (const el of document.querySelectorAll("input[type=checkbox]")) {
+            el.addEventListener("pointerdown", syncSwitches);
+            el.addEventListener("keydown", (event) => {
+              if (event.code === "Space") syncSwitches();
+            });
+          }
+        }
 
-    labelBoar.addEventListener("click", () => {
-      setWeaponMode("boar");
-    });
+        function initialize() {
+          createControls();
+          shell.style.setProperty("--weapon-count", weapons.length);
+          bindEvents();
+          syncControlsFromState();
+          updateModels();
+          regenerate();
+          fitWorkspace();
+          requestPaint(true);
+        }
 
-    rivenToggle.addEventListener("click", () => {
-      rivenEnabled = !rivenEnabled;
-      syncRivenUI();
-      updateLabels();
-      rebuildPanels();
-    });
-
-    labelRivenOn.addEventListener("click", () => {
-      rivenEnabled = true;
-      syncRivenUI();
-      updateLabels();
-      rebuildPanels();
-    });
-
-    labelRivenOff.addEventListener("click", () => {
-      rivenEnabled = false;
-      syncRivenUI();
-      updateLabels();
-      rebuildPanels();
-    });
-
-    overchargeToggle.addEventListener("click", () => {
-      overchargeEnabled = !overchargeEnabled;
-      syncOverchargeUI();
-      rebuildPanels();
-    });
-
-    labelOverchargeOn.addEventListener("click", () => {
-      overchargeEnabled = true;
-      syncOverchargeUI();
-      rebuildPanels();
-    });
-
-    labelOverchargeOff.addEventListener("click", () => {
-      overchargeEnabled = false;
-      syncOverchargeUI();
-      rebuildPanels();
-    });
-
-    msSlider.addEventListener("input", () => {
-      rivenMsMemory[weaponMode] = Number(msSlider.value);
-      updateLabels();
-      rebuildPanels();
-    });
-
-    distanceSlider.addEventListener("input", () => {
-      updateLabels();
-      rebuildPanels();
-    });
-
-    fireRateSlider.addEventListener("input", () => {
-      updateLabels();
-    });
-
-    syncWeaponUI();
-    syncRivenUI();
-    syncOverchargeUI();
-    applyWeaponRange(false);
-    requestAnimationFrame(tick);
-  </script>
-</body>
+        initialize();
+      })();
+    </script>
+  </body>
 </html>
