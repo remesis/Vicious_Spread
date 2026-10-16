@@ -1428,6 +1428,7 @@
             id: "kohm",
             name: "Kohm",
             mode: "Fully spooled",
+            randomSpread: true,
             pellets: 12,
             baseRate: 11 / 3,
             disposition: 1.3,
@@ -1637,7 +1638,7 @@
                   (w.overcharge ? 3.5 : 0) +
                   clipBonus +
                   (w.rivenMS ? w.riven / 100 : 0)),
-              spokes = Math.max(1, Math.ceil(pellets));
+              spokes = w.randomSpread ? 0 : Math.max(1, Math.ceil(pellets));
             if (w.model?.spokes !== spokes) dirtyStatic = true;
             const fireRate =
               w.baseRate *
@@ -1717,7 +1718,19 @@
           const count =
             Math.floor(expected) +
             (rand() < expected - Math.floor(expected) ? 1 : 0);
-          const points = new Float32Array(count * 2);
+          const points = new Float32Array(count * (w.randomSpread ? 3 : 2));
+          if (w.randomSpread) {
+            // Retain the cone fraction so every rank reuses the same sample.
+            for (let i = 0; i < count; i++) {
+              const spread = rand(),
+                angle = rand() * TAU,
+                r = Math.sqrt(rand());
+              points[i * 3] = Math.cos(angle) * r;
+              points[i * 3 + 1] = Math.sin(angle) * r;
+              points[i * 3 + 2] = spread;
+            }
+            return points;
+          }
           const spokes = w.model.spokes;
           const indices = new Uint16Array(spokes);
           for (let i = 0; i < spokes; i++) indices[i] = i;
@@ -1861,7 +1874,7 @@
               </label>
               <p class="weapon-sub">
                 <span><strong data-stat="diameter"></strong> wide at <span data-stat="distance"></span></span>
-                <span>Radial Lines: <strong data-stat="spokes"></strong></span>
+                <span>${w.randomSpread ? "Random spread" : 'Radial Lines: <strong data-stat="spokes"></strong>'}</span>
               </p>
             </div>
             <div class="weapon-plot">
@@ -2356,19 +2369,21 @@
                 const rank = c.overlay ? w.rank : c.rank,
                   r = radius(w.angle, rank) * c.scale;
                 circle(bg, c.cx, c.cy, r, w.color + "12", [], true);
-                const guides = new Path2D(),
-                  length = Math.max(r, extent) * 1.02;
-                for (let i = 0; i < w.model.spokes; i++) {
-                  const a = (i * TAU) / w.model.spokes;
-                  guides.moveTo(c.cx, c.cy);
-                  guides.lineTo(
-                    c.cx + Math.cos(a) * length,
-                    c.cy + Math.sin(a) * length,
-                  );
+                if (w.model.spokes) {
+                  const guides = new Path2D(),
+                    length = Math.max(r, extent) * 1.02;
+                  for (let i = 0; i < w.model.spokes; i++) {
+                    const a = (i * TAU) / w.model.spokes;
+                    guides.moveTo(c.cx, c.cy);
+                    guides.lineTo(
+                      c.cx + Math.cos(a) * length,
+                      c.cy + Math.sin(a) * length,
+                    );
+                  }
+                  bg.strokeStyle = w.color + (c.overlay ? "26" : "40");
+                  bg.lineWidth = 1;
+                  bg.stroke(guides);
                 }
-                bg.strokeStyle = w.color + (c.overlay ? "26" : "40");
-                bg.lineWidth = 1;
-                bg.stroke(guides);
                 const baseline = new Path2D();
                 baseline.arc(c.cx, c.cy, radius(w.angle, -1) * c.scale, 0, TAU);
                 c.baselinePaths.push({ path: baseline, color: w.color });
@@ -2419,7 +2434,9 @@
         }
         function drawDots(c, w) {
           const rank = c.overlay ? w.rank : c.rank,
-            r = radius(w.angle, rank) * c.scale;
+            r = radius(w.angle, rank) * c.scale,
+            angle = (w.angle * (1 + spreadBonus(rank)) * Math.PI) / 180,
+            stride = w.randomSpread ? 3 : 2;
           const latest = w.shots.length - 1,
             paths = [new Path2D(), new Path2D(), new Path2D()];
           for (let s = 0; s < w.shots.length; s++) {
@@ -2427,14 +2444,17 @@
               age = latest - s,
               path = paths[age === 0 ? 2 : age <= 2 ? 1 : 0],
               size = age === 0 ? 2 : 1.45;
-            for (let i = 0; i < a.length; i += 2) {
+            for (let i = 0; i < a.length; i += stride) {
+              const pelletRadius = w.randomSpread
+                ? state.distance * c.scale * Math.tan(a[i + 2] * angle)
+                : r;
               let x, y;
               if (state.projection === "impact") {
-                x = c.cx + a[i] * r;
-                y = c.cy + a[i + 1] * r;
+                x = c.cx + a[i] * pelletRadius;
+                y = c.cy + a[i + 1] * pelletRadius;
               } else {
                 x = c.ox + state.distance * c.scale;
-                y = c.oy - a[i] * r;
+                y = c.oy - a[i] * pelletRadius;
               }
               path.moveTo(x + size, y);
               path.arc(x, y, size, 0, TAU);
@@ -2470,7 +2490,7 @@
             el.fireRate.title = "Calculated burst fire rate";
             el.spread.textContent = fmt(w.model.halfAngle, 1) + "°";
             el.diameter.textContent = fmt(w.model.radius * 2, 1) + " m";
-            el.spokes.textContent = fmt(w.model.spokes, 0);
+            if (el.spokes) el.spokes.textContent = fmt(w.model.spokes, 0);
             el.distance.textContent = fmt(state.distance, 0) + " m";
             for (const { field, flag } of RIVEN_FIELDS)
               el[field].disabled = el[field + "Slider"].disabled = !w[flag];
