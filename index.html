@@ -585,7 +585,7 @@
         margin-top: 9px;
       }
       .weapon-row input[type="number"] {
-        width: 62px;
+        width: 78px;
         background: #111617;
         border: 1px solid #3d4643;
         color: var(--text);
@@ -675,6 +675,13 @@
       .riven-control .weapon-row {
         margin: 0 0 6px;
       }
+      .riven-control .weapon-row > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
       .riven-switch {
         flex: 1;
         min-width: 0;
@@ -691,9 +698,6 @@
       }
       .riven-switch input:checked:before {
         left: 13px;
-      }
-      .riven-control .weapon-row input[type="number"] {
-        width: 55px;
       }
       .riven-control .end-labels {
         font-size: 9px;
@@ -861,12 +865,14 @@
           font-size: 12px;
         }
         .unit-number input,
-        .weapon-row input[type="number"],
-        .riven-control .weapon-row input[type="number"] {
+        .weapon-row input[type="number"] {
           width: 76px;
           min-height: 44px;
           padding: 8px;
           font-size: 16px;
+        }
+        .riven-control .weapon-row input[type="number"] {
+          width: 96px;
         }
         input[type="range"] {
           height: 44px;
