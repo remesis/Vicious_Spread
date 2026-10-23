@@ -1171,8 +1171,14 @@
                 </div>
                 <div class="mod-group">
                   <p class="mod-heading">
-                    Fire rate <span id="fireModsBonus">+180%</span>
+                    Fire rate <span id="fireModsBonus">+240%</span>
                   </p>
+                  <label class="switch-row"
+                    ><input id="reinforcedBond" type="checkbox" checked /><span
+                      class="switch-copy"
+                      >Reinforced Bond <small>+60%</small></span
+                    ></label
+                  >
                   <label class="switch-row"
                     ><input id="tempo" type="checkbox" /><span
                       class="switch-copy"
@@ -1468,6 +1474,7 @@
           vigilante: false,
           clipDelegation: false,
           barrage: 90,
+          reinforcedBond: true,
           tempo: false,
           frail: true,
           blast: false,
@@ -1497,6 +1504,7 @@
           ["galvanized", "galv", true],
           ["vigilante", "vigilante", true],
           ["clipDelegation", "clipDelegation", true],
+          ["reinforcedBond", "reinforcedBond", false],
           ["tempo", "tempo", false],
           ["frail", "frail", false],
           ["blast", "blast", false],
@@ -1608,6 +1616,7 @@
           const hasteBonus = state.mote * 1.5;
           const fireMods =
             state.barrage +
+            (state.reinforcedBond ? 60 : 0) +
             (state.tempo ? 90 : 0) +
             (state.frail ? 90 : 0) +
             (state.blast ? 60 : 0) +
