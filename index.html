@@ -481,7 +481,7 @@
       .weapons {
         grid-area: weapons;
         display: grid;
-        grid-template-columns: repeat(var(--weapon-count, 5), minmax(0, 1fr));
+        grid-template-columns: repeat(var(--weapon-count, 4), minmax(0, 1fr));
         gap: var(--gap);
         min-width: 0;
       }
@@ -1162,10 +1162,10 @@
                   >
                   <label
                     class="switch-row"
-                    title="Sobek and Kuva Sobek only. Maximum 15 stacks, active on the next magazine after reload."
+                    title="Kuva Sobek only. Maximum 15 stacks, active on the next magazine after reload."
                     ><input id="clipDelegation" type="checkbox" /><span
                       class="switch-copy"
-                      >Clip Delegation <small>+225% · Sobeks</small></span
+                      >Clip Delegation <small>+225% · Kuva Sobek</small></span
                     ></label
                   >
                 </div>
@@ -1401,27 +1401,13 @@
             name: "Kuva Sobek",
             pellets: 5,
             baseRate: 2.5,
-            disposition: 0.8,
+            disposition: 1.2,
             angle: 16,
             defaultRank: 5,
             rivenFormat: "2p1n",
-            riven: 130.4,
-            rivenRate: 98,
+            riven: 195.5,
+            rivenRate: 147,
             color: "#d98282",
-            supportsClipDelegation: true,
-          },
-          {
-            id: "sobek",
-            name: "Sobek",
-            pellets: 5,
-            baseRate: 2.5,
-            disposition: 1.33,
-            angle: 16,
-            defaultRank: 5,
-            rivenFormat: "2p1n",
-            riven: 216.7,
-            rivenRate: 162.9,
-            color: "#77cbd1",
             supportsClipDelegation: true,
           },
           {
@@ -1431,12 +1417,12 @@
             randomSpread: true,
             pellets: 12,
             baseRate: 11 / 3,
-            disposition: 1.3,
+            disposition: 1.2,
             angle: 20,
             defaultRank: 5,
             rivenFormat: "2p1n",
-            riven: 211.8,
-            rivenRate: 159.3,
+            riven: 195.5,
+            rivenRate: 147,
             color: "#d1bf82",
           },
           {
@@ -1444,12 +1430,12 @@
             name: "Boar Prime",
             pellets: 8,
             baseRate: 14 / 3,
-            disposition: 1.34,
+            disposition: 1.2,
             angle: 30,
             defaultRank: 2,
             rivenFormat: "3p1n",
-            riven: 165.4,
-            rivenRate: 124.4,
+            riven: 148.1,
+            rivenRate: 111.4,
             color: "#a8ca83",
           },
           {
@@ -1457,12 +1443,12 @@
             name: "Strun Wraith",
             pellets: 10,
             baseRate: 2.5,
-            disposition: 1.35,
+            disposition: 1.2,
             angle: 20,
             defaultRank: 5,
             rivenFormat: "3p1n",
-            riven: 166.6,
-            rivenRate: 125.3,
+            riven: 148.1,
+            rivenRate: 111.4,
             color: "#b6a1e3",
             barrel: 5,
             pelletsPerBarrelStack: 0.05,
